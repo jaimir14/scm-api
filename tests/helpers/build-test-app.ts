@@ -1,4 +1,4 @@
-import Fastify, { FastifyInstance } from 'fastify';
+import Fastify, { FastifyInstance, FastifyError } from 'fastify';
 import fastifyJwt from '@fastify/jwt';
 import * as z from 'zod';
 import { env } from '../../src/config';
@@ -17,7 +17,7 @@ export async function buildTestApp(): Promise<FastifyInstance> {
   });
 
   // Mirror the error handler from app.ts so Zod/AppError responses work in tests
-  app.setErrorHandler((error, _request, reply) => {
+  app.setErrorHandler((error: FastifyError, _request, reply) => {
     if (error instanceof z.ZodError) {
       return reply.status(400).send({
         success: false,
