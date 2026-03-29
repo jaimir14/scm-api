@@ -35,6 +35,7 @@ All routes under a module share a common prefix and auth hook. Request bodies/pa
 ### Module pattern
 
 Each feature lives in `src/modules/<name>/` with:
+
 - `<name>.schema.ts` — Zod schemas and inferred TypeScript types
 - `<name>.service.ts` — Business logic, imports Prisma client from `src/database/`
 - `<name>.routes.ts` — Fastify route definitions, calls service methods

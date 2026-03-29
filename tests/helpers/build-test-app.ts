@@ -49,6 +49,9 @@ export async function buildTestApp(): Promise<FastifyInstance> {
 /**
  * Generates a valid JWT token for test requests.
  */
-export function getTestToken(app: FastifyInstance, payload?: { sub: string; role: string }): string {
+export function getTestToken(
+  app: FastifyInstance,
+  payload?: { sub: string; role: string },
+): string {
   return app.jwt.sign(payload ?? { sub: 'test-user-1', role: 'admin' });
 }

@@ -84,12 +84,15 @@ npm start
 ## API Endpoints
 
 ### Health Check
+
 - `GET /health` — No auth required
 
 ### Auth (development/testing)
+
 - `POST /api/v1/auth/token` — Generate a JWT token
 
 ### Patients (requires JWT)
+
 - `GET /api/v1/patients` — List patients (paginated)
 - `GET /api/v1/patients/:id` — Get a patient
 - `POST /api/v1/patients` — Create a patient

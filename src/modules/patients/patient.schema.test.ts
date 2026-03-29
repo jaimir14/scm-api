@@ -10,25 +10,25 @@ describe('createPatientSchema', () => {
 
   it('should reject empty name', () => {
     expect(() =>
-      createPatientSchema.parse({ name: '', address: '123 Main St', phone: '555-1234' })
+      createPatientSchema.parse({ name: '', address: '123 Main St', phone: '555-1234' }),
     ).toThrow();
   });
 
   it('should reject missing name', () => {
     expect(() =>
-      createPatientSchema.parse({ address: '123 Main St', phone: '555-1234' })
+      createPatientSchema.parse({ address: '123 Main St', phone: '555-1234' }),
     ).toThrow();
   });
 
   it('should reject empty address', () => {
     expect(() =>
-      createPatientSchema.parse({ name: 'Test', address: '', phone: '555-1234' })
+      createPatientSchema.parse({ name: 'Test', address: '', phone: '555-1234' }),
     ).toThrow();
   });
 
   it('should reject empty phone', () => {
     expect(() =>
-      createPatientSchema.parse({ name: 'Test', address: '123 Main St', phone: '' })
+      createPatientSchema.parse({ name: 'Test', address: '123 Main St', phone: '' }),
     ).toThrow();
   });
 
@@ -38,7 +38,7 @@ describe('createPatientSchema', () => {
         name: 'A'.repeat(256),
         address: '123 Main St',
         phone: '555-1234',
-      })
+      }),
     ).toThrow();
   });
 
@@ -48,7 +48,7 @@ describe('createPatientSchema', () => {
         name: 'Test',
         address: 'A'.repeat(501),
         phone: '555-1234',
-      })
+      }),
     ).toThrow();
   });
 
@@ -58,7 +58,7 @@ describe('createPatientSchema', () => {
         name: 'Test',
         address: '123 Main St',
         phone: '5'.repeat(51),
-      })
+      }),
     ).toThrow();
   });
 

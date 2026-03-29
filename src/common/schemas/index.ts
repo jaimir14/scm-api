@@ -1,1 +1,5 @@
-export { paginationSchema, type PaginationQuery, type PaginatedResponse } from './pagination.schema';
+export {
+  paginationSchema,
+  type PaginationQuery,
+  type PaginatedResponse,
+} from './pagination.schema';

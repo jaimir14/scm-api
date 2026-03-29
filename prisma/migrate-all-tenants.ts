@@ -40,7 +40,8 @@ try {
 }
 
 const dryRun = process.argv.includes('--dry-run');
-const results: { name: string; schema: string; status: 'success' | 'failed'; error?: string }[] = [];
+const results: { name: string; schema: string; status: 'success' | 'failed'; error?: string }[] =
+  [];
 
 console.log(`\nMigrating ${config.tenants.length} tenant(s)...\n`);
 
@@ -50,7 +51,9 @@ for (const tenant of config.tenants) {
   console.log(`--- ${tenant.name} (${tenant.schema}) ---`);
 
   if (dryRun) {
-    console.log(`  [DRY RUN] Would run: DATABASE_URL=mysql://***@${DB_HOST}:${DB_PORT}/${tenant.schema} prisma migrate deploy\n`);
+    console.log(
+      `  [DRY RUN] Would run: DATABASE_URL=mysql://***@${DB_HOST}:${DB_PORT}/${tenant.schema} prisma migrate deploy\n`,
+    );
     results.push({ name: tenant.name, schema: tenant.schema, status: 'success' });
     continue;
   }
