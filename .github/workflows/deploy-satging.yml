@@ -1,0 +1,27 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest                                                                                                                                                                                          
+   
+    steps:                                                                                                                                                                                                          
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:                                                                                                                                                                                                       
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}                                                                                                                                                                      
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT }}
+          script: |
+            cd /srv/scmweb-stg/scm-api
+            git checkout staging                                                                                                                                                                                    
+            git pull origin
+            npm install --omit=dev                                                                                                                                                                                  
+            npm run build
+            pm2 restart ecosystem.config.js                                                                                                                                                                         
+            pm2 save
