@@ -1,0 +1,7 @@
+{
+  "tenants": [
+    { "name": "Bright Smile Dental", "schema": "bright_smile_dental" },
+    { "name": "Dr. Martinez Office", "schema": "dr_martinez_office" },
+    { "name": "City Health Clinic", "schema": "city_health_clinic" }
+  ]
+}
