@@ -31,3 +31,5 @@ prisma/tenants.json
 # Coverage
 coverage/
 
+# PM2
+ecosystem.*
