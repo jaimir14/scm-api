@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { authenticate } from '../auth';
 import { patientService } from './patient.service';
-import { createPatientSchema, updatePatientSchema, patientIdSchema } from './patient.schema';
+import { createPatientSchema, updatePatientSchema, patientIdSchema, patientSearchSchema, profesionalIdParamSchema } from './patient.schema';
 import { paginationSchema } from '../../common/schemas';
 import { AppError } from '../../common/errors';
 
@@ -14,6 +14,20 @@ export async function patientRoutes(fastify: FastifyInstance) {
     const query = paginationSchema.parse(request.query);
     const result = await patientService.findAll(query);
     return reply.send({ success: true, ...result });
+  });
+
+  // GET /patients/by-professional/:profesionalId - Get patients for a professional
+  fastify.get('/by-professional/:profesionalId', async (request, reply) => {
+    const { profesionalId } = profesionalIdParamSchema.parse(request.params);
+    const data = await patientService.findByProfessional(profesionalId);
+    return reply.send({ success: true, data });
+  });
+
+  // GET /patients/search - Search patients by nombre or cedula
+  fastify.get('/search', async (request, reply) => {
+    const query = patientSearchSchema.parse(request.query);
+    const data = await patientService.search(query);
+    return reply.send({ success: true, data });
   });
 
   // GET /patients/:id - Get a single patient

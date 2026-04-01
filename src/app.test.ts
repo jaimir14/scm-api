@@ -1,17 +1,32 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 
+// Helper to create a mock model with common Prisma methods
+function mockModel() {
+  return {
+    findMany: vi.fn(),
+    findUnique: vi.fn(),
+    findFirstOrThrow: vi.fn(),
+    count: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    upsert: vi.fn(),
+  };
+}
+
 // Mock Prisma before importing app
 vi.mock('./database', () => ({
   prisma: {
-    patient: {
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-      findFirstOrThrow: vi.fn(),
-      count: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-    },
+    patient: mockModel(),
+    clinic: mockModel(),
+    professional: mockModel(),
+    user: mockModel(),
+    appointmentType: mockModel(),
+    treatment: mockModel(),
+    consultation: mockModel(),
+    appointment: mockModel(),
+    auditLog: mockModel(),
+    systemConfig: mockModel(),
     $disconnect: vi.fn(),
   },
 }));
@@ -85,7 +100,7 @@ describe('App', () => {
     });
     const token = JSON.parse(tokenRes.body).data.token;
 
-    // Send invalid patient data to trigger Zod error
+    // Send invalid patient data to trigger Zod error (missing required fields)
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/patients',
@@ -93,7 +108,7 @@ describe('App', () => {
         authorization: `Bearer ${token}`,
         'content-type': 'application/json',
       },
-      payload: { name: '', address: '', phone: '' },
+      payload: { nombre: '', direccion: '', telefonoCelular: '' },
     });
 
     const body = JSON.parse(res.body);

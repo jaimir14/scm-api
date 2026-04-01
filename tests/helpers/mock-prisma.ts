@@ -1,11 +1,10 @@
 import { vi } from 'vitest';
 
 /**
- * Creates a mock Prisma client with all Patient model methods stubbed.
- * Import this and use vi.mock() to replace the real prisma import.
+ * Creates a mock model with all common Prisma methods stubbed.
  */
-export const mockPrismaClient = {
-  patient: {
+function mockModel() {
+  return {
     findMany: vi.fn(),
     findUnique: vi.fn(),
     findFirstOrThrow: vi.fn(),
@@ -13,6 +12,23 @@ export const mockPrismaClient = {
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
-  },
+    upsert: vi.fn(),
+  };
+}
+
+/**
+ * Creates a mock Prisma client with all model methods stubbed.
+ * Import this and use vi.mock() to replace the real prisma import.
+ */
+export const mockPrismaClient = {
+  patient: mockModel(),
+  clinic: mockModel(),
+  user: mockModel(),
+  appointmentType: mockModel(),
+  treatment: mockModel(),
+  consultation: mockModel(),
+  appointment: mockModel(),
+  auditLog: mockModel(),
+  systemConfig: mockModel(),
   $disconnect: vi.fn(),
 };

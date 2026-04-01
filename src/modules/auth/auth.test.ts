@@ -1,6 +1,13 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { buildTestApp, getTestToken } from '../../../tests/helpers/build-test-app';
+import { mockPrismaClient } from '../../../tests/helpers/mock-prisma';
+
+// Mock database before importing routes (auth routes now use userService)
+vi.mock('../../database', () => ({
+  prisma: mockPrismaClient,
+}));
+
 import { authenticate } from './auth.guard';
 import { authRoutes } from './auth.routes';
 

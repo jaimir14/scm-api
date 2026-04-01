@@ -13,9 +13,33 @@ describe('PatientService', () => {
 
   const mockPatient = {
     id: 1,
-    name: 'Maria Garcia',
-    address: '123 Main St',
-    phone: '305-555-1234',
+    nombre: 'Maria',
+    apellido1: 'Garcia',
+    apellido2: null,
+    tipoIdentificacion: 'CEDULA',
+    numeroIdentificacion: '123456789',
+    telefonoCelular: '305-555-1234',
+    telefonoCasa: null,
+    telefonoTrabajo: null,
+    otroTelefono: null,
+    sexo: 'FEMENINO',
+    estadoCivil: 'SOLTERO',
+    direccion: '123 Main St',
+    email: null,
+    ocupacion: null,
+    fechaNacimiento: new Date('1990-01-01'),
+    tipoSangre: null,
+    clinicaId: 1,
+    profesionalId: 1,
+    fotografia: null,
+    antecedentesPatologicos: null,
+    antecedentesNoPatologicos: null,
+    antecedentesQuirurgicos: null,
+    antecedentesGinecoObstetricos: null,
+    antecedentesHeredoFamiliares: null,
+    otrosAntecedentes: null,
+    notas: null,
+    estado: true,
     createdAt: new Date('2026-01-01'),
     updatedAt: new Date('2026-01-01'),
   };
@@ -44,6 +68,7 @@ describe('PatientService', () => {
         skip: 0,
         take: 20,
         orderBy: { createdAt: 'desc' },
+        include: { clinica: true, profesional: { select: { id: true, nombre: true, especialidad: true, clinicaId: true, clinica: true } } },
       });
     });
 
@@ -57,6 +82,7 @@ describe('PatientService', () => {
         skip: 10,
         take: 10,
         orderBy: { createdAt: 'desc' },
+        include: { clinica: true, profesional: { select: { id: true, nombre: true, especialidad: true, clinicaId: true, clinica: true } } },
       });
       expect(result.meta.totalPages).toBe(3);
     });
@@ -73,6 +99,44 @@ describe('PatientService', () => {
     });
   });
 
+  describe('search', () => {
+    it('should search patients by nombre', async () => {
+      mockPrismaClient.patient.findMany.mockResolvedValue([mockPatient]);
+
+      const result = await service.search({ q: 'Maria', type: 'nombre' });
+
+      expect(result).toEqual([mockPatient]);
+      expect(mockPrismaClient.patient.findMany).toHaveBeenCalledWith({
+        where: {
+          OR: [
+            { nombre: { contains: 'Maria' } },
+            { apellido1: { contains: 'Maria' } },
+            { apellido2: { contains: 'Maria' } },
+          ],
+        },
+        include: { clinica: true, profesional: { select: { id: true, nombre: true, especialidad: true, clinicaId: true, clinica: true } } },
+        take: 20,
+        orderBy: { nombre: 'asc' },
+      });
+    });
+
+    it('should search patients by cedula', async () => {
+      mockPrismaClient.patient.findMany.mockResolvedValue([mockPatient]);
+
+      const result = await service.search({ q: '123456', type: 'cedula' });
+
+      expect(result).toEqual([mockPatient]);
+      expect(mockPrismaClient.patient.findMany).toHaveBeenCalledWith({
+        where: {
+          numeroIdentificacion: { contains: '123456' },
+        },
+        include: { clinica: true, profesional: { select: { id: true, nombre: true, especialidad: true, clinicaId: true, clinica: true } } },
+        take: 20,
+        orderBy: { nombre: 'asc' },
+      });
+    });
+  });
+
   describe('findById', () => {
     it('should return patient when found', async () => {
       mockPrismaClient.patient.findUnique.mockResolvedValue(mockPatient);
@@ -80,7 +144,10 @@ describe('PatientService', () => {
       const result = await service.findById(1);
 
       expect(result).toEqual(mockPatient);
-      expect(mockPrismaClient.patient.findUnique).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(mockPrismaClient.patient.findUnique).toHaveBeenCalledWith({
+        where: { id: 1 },
+        include: { clinica: true, profesional: { select: { id: true, nombre: true, especialidad: true, clinicaId: true, clinica: true } } },
+      });
     });
 
     it('should throw NotFoundError when patient does not exist', async () => {
@@ -92,35 +159,52 @@ describe('PatientService', () => {
 
   describe('create', () => {
     it('should create and return a new patient', async () => {
-      const input = { name: 'New Patient', address: '456 Oak Ave', phone: '555-0000' };
+      const input = {
+        nombre: 'New Patient',
+        apellido1: 'Test',
+        tipoIdentificacion: 'CEDULA' as const,
+        numeroIdentificacion: '987654321',
+        telefonoCelular: '555-0000',
+        sexo: 'MASCULINO' as const,
+        estadoCivil: 'SOLTERO' as const,
+        direccion: '456 Oak Ave',
+        fechaNacimiento: new Date('1985-05-15'),
+        clinicaId: 1,
+        profesionalId: 1,
+        estado: true,
+      };
       mockPrismaClient.patient.create.mockResolvedValue({ ...mockPatient, ...input, id: 2 });
 
       const result = await service.create(input);
 
-      expect(result.name).toBe('New Patient');
-      expect(mockPrismaClient.patient.create).toHaveBeenCalledWith({ data: input });
+      expect(result.nombre).toBe('New Patient');
+      expect(mockPrismaClient.patient.create).toHaveBeenCalledWith({
+        data: input,
+        include: { clinica: true, profesional: { select: { id: true, nombre: true, especialidad: true, clinicaId: true, clinica: true } } },
+      });
     });
   });
 
   describe('update', () => {
     it('should update and return the patient', async () => {
-      const input = { phone: '555-9999' };
+      const input = { telefonoCelular: '555-9999' };
       mockPrismaClient.patient.findUnique.mockResolvedValue(mockPatient);
       mockPrismaClient.patient.update.mockResolvedValue({ ...mockPatient, ...input });
 
       const result = await service.update(1, input);
 
-      expect(result.phone).toBe('555-9999');
+      expect(result.telefonoCelular).toBe('555-9999');
       expect(mockPrismaClient.patient.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: input,
+        include: { clinica: true, profesional: { select: { id: true, nombre: true, especialidad: true, clinicaId: true, clinica: true } } },
       });
     });
 
     it('should throw NotFoundError when updating non-existent patient', async () => {
       mockPrismaClient.patient.findUnique.mockResolvedValue(null);
 
-      await expect(service.update(999, { name: 'Updated' })).rejects.toThrow('Patient not found');
+      await expect(service.update(999, { nombre: 'Updated' })).rejects.toThrow('Patient not found');
     });
   });
 

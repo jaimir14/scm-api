@@ -7,13 +7,238 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Patient {
+// --- Enums ---
+
+enum TipoIdentificacion {
+  CEDULA
+  PASAPORTE
+  RESIDENCIA
+}
+
+enum Sexo {
+  MASCULINO
+  FEMENINO
+}
+
+enum EstadoCivil {
+  SOLTERO
+  CASADO
+  DIVORCIADO
+  VIUDO
+}
+
+enum Rol {
+  ADMINISTRADOR
+  MEDICO
+  RECEPCION
+  ENFERMERIA
+}
+
+enum CategoriaTratamiento {
+  PREVENTIVO
+  CIRUGIA
+  RESTAURACION
+  ORTODONCIA
+}
+
+enum EstadoCita {
+  PENDIENTE
+  ATENDIDA
+  CANCELADA
+}
+
+enum AccionBitacora {
+  INICIO_SESION
+  CREACION
+  ACTUALIZACION
+  ELIMINACION
+  CONSULTA
+}
+
+// --- Models ---
+
+model Clinic {
   id        Int      @id @default(autoincrement())
-  name      String   @db.VarChar(255)
-  address   String   @db.VarChar(500)
-  phone     String   @db.VarChar(50)
+  nombre    String   @db.VarChar(255)
+  direccion String   @db.VarChar(500)
+  telefono  String   @db.VarChar(50)
+  email     String?  @db.VarChar(255)
+  estado    Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  patients Patient[]
+  users    User[]
+
+  @@map("clinics")
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  usuario      String    @unique @db.VarChar(100)
+  nombre       String    @db.VarChar(255)
+  password     String    @db.VarChar(255)
+  rol          Rol
+  especialidad String?   @db.VarChar(255)
+  clinicaId    Int?      @map("clinica_id")
+  estado       Boolean   @default(true)
+  ultimoAcceso DateTime? @map("ultimo_acceso")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  clinica       Clinic?        @relation(fields: [clinicaId], references: [id])
+  patients      Patient[]
+  consultations Consultation[]
+  appointments  Appointment[]
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+model Patient {
+  id                          Int                @id @default(autoincrement())
+  nombre                      String             @db.VarChar(255)
+  apellido1                   String             @db.VarChar(255)
+  apellido2                   String?            @db.VarChar(255)
+  tipoIdentificacion          TipoIdentificacion @map("tipo_identificacion")
+  numeroIdentificacion        String             @unique @map("numero_identificacion") @db.VarChar(50)
+  telefonoCelular             String             @map("telefono_celular") @db.VarChar(50)
+  telefonoCasa                String?            @map("telefono_casa") @db.VarChar(50)
+  telefonoTrabajo             String?            @map("telefono_trabajo") @db.VarChar(50)
+  otroTelefono                String?            @map("otro_telefono") @db.VarChar(50)
+  sexo                        Sexo
+  estadoCivil                 EstadoCivil        @map("estado_civil")
+  direccion                   String             @db.VarChar(500)
+  email                       String?            @db.VarChar(255)
+  ocupacion                   String?            @db.VarChar(255)
+  fechaNacimiento             DateTime           @map("fecha_nacimiento")
+  tipoSangre                  String?            @map("tipo_sangre") @db.VarChar(10)
+  clinicaId                   Int                @map("clinica_id")
+  profesionalId               Int                @map("profesional_id")
+  fotografia                  String?            @db.VarChar(500)
+  antecedentesPatologicos     String?            @map("antecedentes_patologicos") @db.Text
+  antecedentesNoPatologicos   Json?              @map("antecedentes_no_patologicos")
+  antecedentesQuirurgicos     String?            @map("antecedentes_quirurgicos") @db.Text
+  antecedentesGinecoObstetricos Json?            @map("antecedentes_gineco_obstetricos")
+  antecedentesHeredoFamiliares String?           @map("antecedentes_heredo_familiares") @db.Text
+  otrosAntecedentes           String?            @map("otros_antecedentes") @db.Text
+  notas                       String?            @db.Text
+  estado                      Boolean            @default(true)
+  createdAt                   DateTime           @default(now()) @map("created_at")
+  updatedAt                   DateTime           @updatedAt @map("updated_at")
+
+  clinica       Clinic         @relation(fields: [clinicaId], references: [id])
+  profesional   User           @relation(fields: [profesionalId], references: [id])
+  consultations Consultation[]
+  appointments  Appointment[]
+
   @@map("patients")
+}
+
+model AppointmentType {
+  id        Int      @id @default(autoincrement())
+  nombre    String   @db.VarChar(255)
+  duracion  Int
+  estado    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  appointments Appointment[]
+
+  @@map("appointment_types")
+}
+
+model Treatment {
+  id        Int                  @id @default(autoincrement())
+  codigo    String               @unique @db.VarChar(50)
+  nombre    String               @db.VarChar(255)
+  categoria CategoriaTratamiento
+  precio    Decimal              @db.Decimal(10, 2)
+  estado    Boolean              @default(true)
+  createdAt DateTime             @default(now()) @map("created_at")
+  updatedAt DateTime             @updatedAt @map("updated_at")
+
+  @@map("treatments")
+}
+
+model Consultation {
+  id                       Int      @id @default(autoincrement())
+  pacienteId               Int      @map("paciente_id")
+  profesionalId            Int      @map("profesional_id")
+  fecha                    DateTime
+  ocultar                  Boolean  @default(false)
+  peso                     Decimal? @db.Decimal(5, 2)
+  talla                    Decimal? @db.Decimal(5, 2)
+  imc                      Decimal? @db.Decimal(5, 2)
+  temperatura              Decimal? @db.Decimal(4, 1)
+  presionArterial          String?  @map("presion_arterial") @db.VarChar(20)
+  frecuenciaCardiaca       Int?     @map("frecuencia_cardiaca")
+  frecuenciaRespiratoria   Int?     @map("frecuencia_respiratoria")
+  satO2                    Decimal? @map("sat_o2") @db.Decimal(5, 2)
+  motivoConsulta           String?  @map("motivo_consulta") @db.Text
+  examenFisico             String?  @map("examen_fisico") @db.Text
+  impresionDiagnostica     String?  @map("impresion_diagnostica") @db.Text
+  indicacionesTratamientos String?  @map("indicaciones_tratamientos") @db.Text
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  paciente    Patient @relation(fields: [pacienteId], references: [id])
+  profesional User    @relation(fields: [profesionalId], references: [id])
+
+  @@map("consultations")
+}
+
+model Appointment {
+  id             Int        @id @default(autoincrement())
+  pacienteId     Int        @map("paciente_id")
+  profesionalId  Int        @map("profesional_id")
+  tipoCitaId     Int        @map("tipo_cita_id")
+  fecha          DateTime   @db.Date
+  horaInicio     String     @map("hora_inicio") @db.VarChar(10)
+  horaFin        String     @map("hora_fin") @db.VarChar(10)
+  notas          String?    @db.Text
+  estado         EstadoCita @default(PENDIENTE)
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  paciente    Patient         @relation(fields: [pacienteId], references: [id])
+  profesional User            @relation(fields: [profesionalId], references: [id])
+  tipoCita    AppointmentType @relation(fields: [tipoCitaId], references: [id])
+
+  @@map("appointments")
+}
+
+model AuditLog {
+  id        Int             @id @default(autoincrement())
+  fecha     DateTime        @default(now())
+  usuarioId Int?            @map("usuario_id")
+  usuario   String          @db.VarChar(100)
+  accion    AccionBitacora
+  modulo    String          @db.VarChar(100)
+  ip        String?         @db.VarChar(50)
+  detalle   String?         @db.Text
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  usuarioRef User? @relation(fields: [usuarioId], references: [id])
+
+  @@map("audit_logs")
+}
+
+model SystemConfig {
+  id                    Int      @id @default(1)
+  nombreSistema         String   @map("nombre_sistema") @db.VarChar(255)
+  zonaHoraria           String   @map("zona_horaria") @db.VarChar(100)
+  formatoFecha          String   @map("formato_fecha") @db.VarChar(50)
+  duracionCitaDefecto   Int      @map("duracion_cita_defecto")
+  horaInicio            String   @map("hora_inicio") @db.VarChar(10)
+  horaFin               String   @map("hora_fin") @db.VarChar(10)
+  restriccionHorario    Boolean  @default(false) @map("restriccion_horario")
+  registrarBitacora     Boolean  @default(true) @map("registrar_bitacora")
+  requerirCambioClave   Boolean  @default(false) @map("requerir_cambio_clave")
+  tiempoInactividad     Int      @default(30) @map("tiempo_inactividad")
+  recordatorioEmail     Boolean  @default(false) @map("recordatorio_email")
+  notificarMedico       Boolean  @default(false) @map("notificar_medico")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@map("system_config")
 }
