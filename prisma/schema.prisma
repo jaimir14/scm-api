@@ -165,6 +165,7 @@ model Consultation {
   id                       Int      @id @default(autoincrement())
   pacienteId               Int      @map("paciente_id")
   profesionalId            Int      @map("profesional_id")
+  citaId                   Int?     @unique @map("cita_id")
   fecha                    DateTime
   ocultar                  Boolean  @default(false)
   peso                     Decimal? @db.Decimal(5, 2)
@@ -182,10 +183,28 @@ model Consultation {
   createdAt                DateTime @default(now()) @map("created_at")
   updatedAt                DateTime @updatedAt @map("updated_at")
 
-  paciente    Patient @relation(fields: [pacienteId], references: [id])
-  profesional User    @relation(fields: [profesionalId], references: [id])
+  paciente    Patient              @relation(fields: [pacienteId], references: [id])
+  profesional User                 @relation(fields: [profesionalId], references: [id])
+  cita        Appointment?         @relation(fields: [citaId], references: [id])
+  images      ConsultationImage[]
 
   @@map("consultations")
+}
+
+model ConsultationImage {
+  id          Int      @id @default(autoincrement())
+  consultaId  Int      @map("consulta_id")
+  fileName    String   @map("file_name") @db.VarChar(255)
+  storagePath String   @map("storage_path") @db.VarChar(500)
+  fileSize    Int      @map("file_size")
+  mimeType    String   @map("mime_type") @db.VarChar(100)
+  description String?  @db.VarChar(500)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  consulta Consultation @relation(fields: [consultaId], references: [id], onDelete: Cascade)
+
+  @@map("consultation_images")
 }
 
 model Appointment {
@@ -204,6 +223,7 @@ model Appointment {
   paciente    Patient         @relation(fields: [pacienteId], references: [id])
   profesional User            @relation(fields: [profesionalId], references: [id])
   tipoCita    AppointmentType @relation(fields: [tipoCitaId], references: [id])
+  consulta    Consultation?
 
   @@map("appointments")
 }

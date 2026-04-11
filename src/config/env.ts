@@ -17,6 +17,13 @@ const envSchema = z.object({
   // JWT
   JWT_SECRET: z.string().min(32),
   JWT_EXPIRES_IN: z.string().default('1h'),
+
+  // DigitalOcean Spaces (S3-compatible)
+  SPACES_REGION: z.string().optional(),
+  SPACES_BUCKET: z.string().optional(),
+  SPACES_ACCESS_KEY: z.string().optional(),
+  SPACES_SECRET_KEY: z.string().optional(),
+  SPACES_ENDPOINT: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

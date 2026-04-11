@@ -1,5 +1,5 @@
 import { prisma } from '../../database';
-import { NotFoundError } from '../../common/errors';
+import { BadRequestError, NotFoundError } from '../../common/errors';
 import { PaginatedResponse, PaginationQuery } from '../../common/schemas';
 import { CreateConsultationInput, UpdateConsultationInput } from './consultation.schema';
 
@@ -77,6 +77,16 @@ export class ConsultationService {
   }
 
   async create(input: CreateConsultationInput): Promise<Consultation> {
+    if (input.citaId) {
+      const existing = await prisma.consultation.findUnique({
+        where: { citaId: input.citaId },
+      });
+
+      if (existing) {
+        throw new BadRequestError('Ya existe una consulta para esta cita');
+      }
+    }
+
     return prisma.consultation.create({
       data: input,
       include: includeRelations,

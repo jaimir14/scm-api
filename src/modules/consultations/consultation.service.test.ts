@@ -118,8 +118,30 @@ describe('ConsultationService', () => {
       const input = {
         pacienteId: 1,
         profesionalId: 1,
+        citaId: 10,
         fecha: new Date('2026-03-20'),
         ocultar: false,
+        peso: 70,
+        motivoConsulta: 'Dolor de cabeza',
+      };
+      mockPrismaClient.consultation.findUnique.mockResolvedValue(null);
+      mockPrismaClient.consultation.create.mockResolvedValue({ ...mockConsultation, ...input, id: 2 });
+
+      const result = await service.create(input);
+      expect(mockPrismaClient.consultation.create).toHaveBeenCalledWith({
+        data: input,
+        include: includeRelations,
+      });
+    });
+
+    it('should create consultation without citaId', async () => {
+      const input = {
+        pacienteId: 1,
+        profesionalId: 1,
+        fecha: new Date('2026-03-20'),
+        ocultar: false,
+        peso: 70,
+        motivoConsulta: 'Dolor de cabeza',
       };
       mockPrismaClient.consultation.create.mockResolvedValue({ ...mockConsultation, ...input, id: 2 });
 
@@ -128,6 +150,21 @@ describe('ConsultationService', () => {
         data: input,
         include: includeRelations,
       });
+    });
+
+    it('should throw if a consultation already exists for the same appointment', async () => {
+      const input = {
+        pacienteId: 1,
+        profesionalId: 1,
+        citaId: 10,
+        fecha: new Date('2026-03-20'),
+        ocultar: false,
+        peso: 70,
+        motivoConsulta: 'Dolor de cabeza',
+      };
+      mockPrismaClient.consultation.findUnique.mockResolvedValue(mockConsultation);
+
+      await expect(service.create(input)).rejects.toThrow('Ya existe una consulta para esta cita');
     });
   });
 

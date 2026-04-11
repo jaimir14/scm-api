@@ -7,6 +7,7 @@ function mockModel() {
   return {
     findMany: vi.fn(),
     findUnique: vi.fn(),
+    findFirst: vi.fn(),
     findFirstOrThrow: vi.fn(),
     count: vi.fn(),
     create: vi.fn(),

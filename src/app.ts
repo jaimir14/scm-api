@@ -17,6 +17,7 @@ import { auditLogRoutes } from './modules/audit-log';
 import { dashboardRoutes } from './modules/dashboard';
 import { reportRoutes } from './modules/reports';
 import { configRoutes } from './modules/config';
+import { consultationImageRoutes } from './modules/consultation-images';
 import { env } from './config';
 import * as z from 'zod';
 
@@ -35,6 +36,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(cors, {
     origin: true, // Configure per environment in production
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
   await app.register(helmet);
 
@@ -82,6 +84,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   app.register(dashboardRoutes, { prefix: '/api/v1/dashboard' });
   app.register(reportRoutes, { prefix: '/api/v1/reports' });
   app.register(configRoutes, { prefix: '/api/v1/config' });
+  app.register(consultationImageRoutes, { prefix: '/api/v1/consultation-images' });
 
   return app;
 }

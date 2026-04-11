@@ -17,6 +17,7 @@ const requiredNumber = z.preprocess(
 export const createConsultationSchema = z.object({
   pacienteId: z.number().int().positive(),
   profesionalId: z.number().int().positive(),
+  citaId: z.number().int().positive().optional(),
   fecha: z.coerce.date(),
   ocultar: z.boolean().default(false),
   peso: requiredNumber,
