@@ -9,6 +9,7 @@ export const createUserSchema = z.object({
   rol: rolEnum,
   especialidad: z.string().min(1).max(255).optional().nullable(),
   clinicaId: z.number().int().positive().optional().nullable(),
+  fotografia: z.string().max(500).optional().nullable(),
   estado: z.boolean().default(true),
 });
 
@@ -19,6 +20,7 @@ export const updateUserSchema = z.object({
   rol: rolEnum.optional(),
   especialidad: z.string().min(1).max(255).optional().nullable(),
   clinicaId: z.number().int().positive().optional().nullable(),
+  fotografia: z.string().max(500).optional().nullable(),
   estado: z.boolean().optional(),
 });
 

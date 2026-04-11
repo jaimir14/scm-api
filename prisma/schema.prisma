@@ -81,6 +81,7 @@ model User {
   rol          Rol
   especialidad String?   @db.VarChar(255)
   clinicaId    Int?      @map("clinica_id")
+  fotografia   String?   @db.VarChar(500)
   estado       Boolean   @default(true)
   ultimoAcceso DateTime? @map("ultimo_acceso")
   createdAt    DateTime  @default(now()) @map("created_at")
@@ -115,7 +116,6 @@ model Patient {
   tipoSangre                  String?            @map("tipo_sangre") @db.VarChar(10)
   clinicaId                   Int                @map("clinica_id")
   profesionalId               Int                @map("profesional_id")
-  fotografia                  String?            @db.VarChar(500)
   antecedentesPatologicos     String?            @map("antecedentes_patologicos") @db.Text
   antecedentesNoPatologicos   Json?              @map("antecedentes_no_patologicos")
   antecedentesQuirurgicos     String?            @map("antecedentes_quirurgicos") @db.Text
@@ -131,6 +131,7 @@ model Patient {
   profesional   User           @relation(fields: [profesionalId], references: [id])
   consultations Consultation[]
   appointments  Appointment[]
+  files         PatientFile[]
 
   @@map("patients")
 }
@@ -187,6 +188,7 @@ model Consultation {
   profesional User                 @relation(fields: [profesionalId], references: [id])
   cita        Appointment?         @relation(fields: [citaId], references: [id])
   images      ConsultationImage[]
+  files       PatientFile[]
 
   @@map("consultations")
 }
@@ -205,6 +207,24 @@ model ConsultationImage {
   consulta Consultation @relation(fields: [consultaId], references: [id], onDelete: Cascade)
 
   @@map("consultation_images")
+}
+
+model PatientFile {
+  id          Int      @id @default(autoincrement())
+  pacienteId  Int      @map("paciente_id")
+  consultaId  Int?     @map("consulta_id")
+  fileName    String   @map("file_name") @db.VarChar(255)
+  storagePath String   @map("storage_path") @db.VarChar(500)
+  fileSize    Int      @map("file_size")
+  mimeType    String   @map("mime_type") @db.VarChar(100)
+  description String?  @db.VarChar(500)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  paciente Patient       @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  consulta Consultation? @relation(fields: [consultaId], references: [id], onDelete: SetNull)
+
+  @@map("patient_files")
 }
 
 model Appointment {

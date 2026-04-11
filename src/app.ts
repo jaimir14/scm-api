@@ -18,6 +18,7 @@ import { dashboardRoutes } from './modules/dashboard';
 import { reportRoutes } from './modules/reports';
 import { configRoutes } from './modules/config';
 import { consultationImageRoutes } from './modules/consultation-images';
+import { patientFileRoutes } from './modules/patient-files';
 import { env } from './config';
 import * as z from 'zod';
 
@@ -85,6 +86,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   app.register(reportRoutes, { prefix: '/api/v1/reports' });
   app.register(configRoutes, { prefix: '/api/v1/config' });
   app.register(consultationImageRoutes, { prefix: '/api/v1/consultation-images' });
+  app.register(patientFileRoutes, { prefix: '/api/v1/patient-files' });
 
   return app;
 }
