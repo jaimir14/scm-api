@@ -22,6 +22,7 @@ jobs:
             git checkout staging                                                                                                                                                                                    
             git pull origin
             npm install                                                                                                                                                                                  
+            npm run prisma:generate
             npm run build
             pm2 restart ecosystem.config.js                                                                                                                                                                         
             pm2 save
