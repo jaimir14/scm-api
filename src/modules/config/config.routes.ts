@@ -3,6 +3,7 @@ import { authenticate } from '../auth';
 import { configService } from './config.service';
 import { updateConfigSchema } from './config.schema';
 import { AppError } from '../../common/errors';
+import { logFromRequest } from '../audit-log';
 
 export async function configRoutes(fastify: FastifyInstance) {
   fastify.addHook('onRequest', authenticate);
@@ -22,6 +23,7 @@ export async function configRoutes(fastify: FastifyInstance) {
     }
 
     const config = await configService.update(input);
+    logFromRequest(request, 'ACTUALIZACION', 'Configuración', 'Configuración del sistema actualizada');
     return reply.send({ success: true, data: config });
   });
 }

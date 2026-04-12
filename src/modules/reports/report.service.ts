@@ -93,7 +93,7 @@ export class ReportService {
 
   async userReport(query: UserReportQuery) {
     const where: Prisma.UserWhereInput = {};
-    if (query.rol) where.rol = query.rol;
+    if (query.rolId) where.rolId = query.rolId;
     if (query.estado !== undefined) where.estado = query.estado;
 
     const [data, count] = await Promise.all([
@@ -104,7 +104,8 @@ export class ReportService {
           id: true,
           usuario: true,
           nombre: true,
-          rol: true,
+          rolId: true,
+          rol: { select: { id: true, nombre: true } },
           estado: true,
           ultimoAcceso: true,
           createdAt: true,

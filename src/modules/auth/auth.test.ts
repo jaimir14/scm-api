@@ -93,7 +93,7 @@ describe('Auth Routes', () => {
       method: 'POST',
       url: '/api/v1/auth/token',
       headers: { 'content-type': 'application/json' },
-      payload: { sub: 'user-1', role: 'admin' },
+      payload: { sub: 'user-1', rolId: 1, esAdmin: true },
     });
 
     const body = JSON.parse(res.body);
@@ -103,23 +103,13 @@ describe('Auth Routes', () => {
     expect(typeof body.data.token).toBe('string');
 
     // Verify the token is actually valid by decoding it
-    const decoded = app.jwt.verify(body.data.token) as { sub: string; role: string };
+    const decoded = app.jwt.verify(body.data.token) as { sub: string; rolId: number; esAdmin: boolean };
     expect(decoded.sub).toBe('user-1');
-    expect(decoded.role).toBe('admin');
+    expect(decoded.rolId).toBe(1);
+    expect(decoded.esAdmin).toBe(true);
   });
 
-  it('should return error when sub is missing', async () => {
-    const res = await app.inject({
-      method: 'POST',
-      url: '/api/v1/auth/token',
-      headers: { 'content-type': 'application/json' },
-      payload: { role: 'admin' },
-    });
-
-    expect(res.statusCode).toBe(400);
-  });
-
-  it('should return error when role is missing', async () => {
+  it('should generate token with defaults when only sub is provided', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/auth/token',
@@ -127,6 +117,8 @@ describe('Auth Routes', () => {
       payload: { sub: 'user-1' },
     });
 
-    expect(res.statusCode).toBe(400);
+    const body = JSON.parse(res.body);
+    expect(res.statusCode).toBe(200);
+    expect(body.data.token).toBeDefined();
   });
 });

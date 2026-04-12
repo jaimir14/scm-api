@@ -10,3 +10,13 @@ export async function authenticate(request: FastifyRequest, reply: FastifyReply)
     });
   }
 }
+
+export async function requireAdmin(request: FastifyRequest, reply: FastifyReply) {
+  const user = request.user;
+  if (!user?.esAdmin) {
+    reply.status(403).send({
+      success: false,
+      error: 'Forbidden: Se requieren permisos de administrador',
+    });
+  }
+}

@@ -163,7 +163,7 @@ describe('Report Routes', () => {
 
       const res = await app.inject({
         method: 'GET',
-        url: '/api/v1/reports/users?rol=MEDICO&estado=true',
+        url: '/api/v1/reports/users?rolId=2&estado=true',
         headers: { authorization: `Bearer ${token}` },
       });
 

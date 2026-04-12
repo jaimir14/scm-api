@@ -18,7 +18,12 @@ describe('User Routes', () => {
     usuario: 'jdoe',
     nombre: 'John Doe',
     password: '$2a$10$hashedpassword',
-    rol: 'ADMINISTRADOR',
+    rolId: 1,
+    rol: { id: 1, nombre: 'Administrador', esAdmin: true },
+    tipoIdentificacion: 'CEDULA',
+    numeroIdentificacion: '123456789',
+    sexo: 'MASCULINO',
+    clinicaId: 1,
     estado: true,
     ultimoAcceso: null,
     createdAt: new Date('2026-01-01'),
@@ -29,7 +34,11 @@ describe('User Routes', () => {
     usuario: 'newuser',
     nombre: 'New User',
     password: 'secret123',
-    rol: 'MEDICO',
+    rolId: 2,
+    tipoIdentificacion: 'CEDULA',
+    numeroIdentificacion: '987654321',
+    sexo: 'MASCULINO',
+    clinicaId: 1,
   };
 
   beforeAll(async () => {
@@ -129,12 +138,12 @@ describe('User Routes', () => {
       expect(res.statusCode).toBe(400);
     });
 
-    it('should return 400 for invalid rol', async () => {
+    it('should return 400 for invalid rolId', async () => {
       const res = await app.inject({
         method: 'POST',
         url: '/api/v1/users',
         headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-        payload: { ...validCreateInput, rol: 'INVALID' },
+        payload: { ...validCreateInput, rolId: 0 },
       });
       expect(res.statusCode).toBe(400);
     });

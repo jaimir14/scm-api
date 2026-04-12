@@ -4,6 +4,7 @@ import { appointmentTypeService } from './appointment-type.service';
 import { createAppointmentTypeSchema, updateAppointmentTypeSchema, appointmentTypeIdSchema } from './appointment-type.schema';
 import { paginationSchema } from '../../common/schemas';
 import { AppError } from '../../common/errors';
+import { logFromRequest } from '../audit-log';
 
 export async function appointmentTypeRoutes(fastify: FastifyInstance) {
   fastify.addHook('onRequest', authenticate);
@@ -32,6 +33,7 @@ export async function appointmentTypeRoutes(fastify: FastifyInstance) {
   fastify.post('/', async (request, reply) => {
     const input = createAppointmentTypeSchema.parse(request.body);
     const appointmentType = await appointmentTypeService.create(input);
+    logFromRequest(request, 'CREACION', 'Tipos de Cita', `Tipo de cita creado: ${input.nombre}`);
     return reply.status(201).send({ success: true, data: appointmentType });
   });
 
@@ -45,6 +47,7 @@ export async function appointmentTypeRoutes(fastify: FastifyInstance) {
     }
 
     const appointmentType = await appointmentTypeService.update(id, input);
+    logFromRequest(request, 'ACTUALIZACION', 'Tipos de Cita', `Tipo de cita actualizado: ID ${id}`);
     return reply.send({ success: true, data: appointmentType });
   });
 
@@ -52,6 +55,7 @@ export async function appointmentTypeRoutes(fastify: FastifyInstance) {
   fastify.delete('/:id', async (request, reply) => {
     const { id } = appointmentTypeIdSchema.parse(request.params);
     await appointmentTypeService.delete(id);
+    logFromRequest(request, 'ELIMINACION', 'Tipos de Cita', `Tipo de cita eliminado: ID ${id}`);
     return reply.status(204).send();
   });
 }

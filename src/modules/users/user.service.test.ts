@@ -15,10 +15,14 @@ describe('UserService', () => {
     usuario: 'jdoe',
     nombre: 'John Doe',
     password: '$2a$10$hashedpassword',
-    rol: 'ADMINISTRADOR',
+    rolId: 1,
+    rol: { id: 1, nombre: 'Administrador', esAdmin: true },
+    tipoIdentificacion: 'CEDULA',
+    numeroIdentificacion: '123456789',
+    sexo: 'MASCULINO',
     especialidad: null,
-    clinicaId: null,
-    clinica: null,
+    clinicaId: 1,
+    clinica: { id: 1, nombre: 'Test Clinic' },
     estado: true,
     ultimoAcceso: null,
     createdAt: new Date('2026-01-01'),
@@ -53,7 +57,7 @@ describe('UserService', () => {
         skip: 10,
         take: 10,
         orderBy: { createdAt: 'desc' },
-        include: { clinica: true },
+        include: { clinica: true, rol: true },
       });
       expect(result.meta.totalPages).toBe(3);
     });
@@ -69,7 +73,7 @@ describe('UserService', () => {
       expect(result.usuario).toBe('jdoe');
       expect(mockPrismaClient.user.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
-        include: { clinica: true },
+        include: { clinica: true, rol: true },
       });
     });
 
@@ -89,6 +93,7 @@ describe('UserService', () => {
       expect(result).toHaveProperty('password');
       expect(mockPrismaClient.user.findUnique).toHaveBeenCalledWith({
         where: { usuario: 'jdoe' },
+        include: { clinica: true, rol: true },
       });
     });
 
@@ -107,7 +112,11 @@ describe('UserService', () => {
         usuario: 'newuser',
         nombre: 'New User',
         password: 'secret123',
-        rol: 'MEDICO' as const,
+        rolId: 2,
+        tipoIdentificacion: 'CEDULA' as const,
+        numeroIdentificacion: '987654321',
+        sexo: 'MASCULINO' as const,
+        clinicaId: 1,
         estado: true,
       };
       mockPrismaClient.user.create.mockResolvedValue({ ...mockUser, ...input, id: 2 });
@@ -134,7 +143,7 @@ describe('UserService', () => {
       expect(mockPrismaClient.user.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: input,
-        include: { clinica: true },
+        include: { clinica: true, rol: true },
       });
     });
 

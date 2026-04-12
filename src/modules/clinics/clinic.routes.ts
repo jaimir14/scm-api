@@ -3,6 +3,7 @@ import { authenticate } from '../auth';
 import { clinicService } from './clinic.service';
 import { createClinicSchema, updateClinicSchema, clinicIdSchema, clinicQuerySchema } from './clinic.schema';
 import { AppError } from '../../common/errors';
+import { logFromRequest } from '../audit-log';
 
 export async function clinicRoutes(fastify: FastifyInstance) {
   fastify.addHook('onRequest', authenticate);
@@ -31,6 +32,7 @@ export async function clinicRoutes(fastify: FastifyInstance) {
   fastify.post('/', async (request, reply) => {
     const input = createClinicSchema.parse(request.body);
     const clinic = await clinicService.create(input);
+    logFromRequest(request, 'CREACION', 'Clínicas', `Clínica creada: ${input.nombre}`);
     return reply.status(201).send({ success: true, data: clinic });
   });
 
@@ -44,6 +46,7 @@ export async function clinicRoutes(fastify: FastifyInstance) {
     }
 
     const clinic = await clinicService.update(id, input);
+    logFromRequest(request, 'ACTUALIZACION', 'Clínicas', `Clínica actualizada: ID ${id}`);
     return reply.send({ success: true, data: clinic });
   });
 
@@ -51,6 +54,7 @@ export async function clinicRoutes(fastify: FastifyInstance) {
   fastify.delete('/:id', async (request, reply) => {
     const { id } = clinicIdSchema.parse(request.params);
     await clinicService.delete(id);
+    logFromRequest(request, 'ELIMINACION', 'Clínicas', `Clínica eliminada: ID ${id}`);
     return reply.status(204).send();
   });
 }

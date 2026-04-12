@@ -8,6 +8,7 @@ import {
   consultationIdParamSchema,
   fileIdParamSchema,
 } from './patient-file.schema';
+import { logFromRequest } from '../audit-log';
 
 export async function patientFileRoutes(fastify: FastifyInstance) {
   fastify.addHook('onRequest', authenticate);
@@ -23,6 +24,7 @@ export async function patientFileRoutes(fastify: FastifyInstance) {
   fastify.post('/', async (request, reply) => {
     const input = registerFileSchema.parse(request.body);
     const file = await patientFileService.register(input);
+    logFromRequest(request, 'CREACION', 'Archivos', `Archivo subido: ${input.fileName} para paciente ID ${input.pacienteId}`);
     return reply.status(201).send({ success: true, data: file });
   });
 
@@ -51,6 +53,7 @@ export async function patientFileRoutes(fastify: FastifyInstance) {
   fastify.delete('/:id', async (request, reply) => {
     const { id } = fileIdParamSchema.parse(request.params);
     await patientFileService.delete(id);
+    logFromRequest(request, 'ELIMINACION', 'Archivos', `Archivo eliminado: ID ${id}`);
     return reply.status(204).send();
   });
 }

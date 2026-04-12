@@ -23,7 +23,7 @@ export const treatmentReportSchema = z.object({
 });
 
 export const userReportSchema = z.object({
-  rol: z.enum(['ADMINISTRADOR', 'MEDICO', 'RECEPCION', 'ENFERMERIA']).optional(),
+  rolId: z.coerce.number().int().positive().optional(),
   estado: z.coerce.boolean().optional(),
 });
 

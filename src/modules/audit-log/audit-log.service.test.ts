@@ -32,7 +32,8 @@ describe('AuditLogService', () => {
 
       const result = await service.findAll({ page: 1, limit: 20 });
 
-      expect(result.data).toEqual([mockLog]);
+      expect(result.data[0]).toMatchObject(mockLog);
+      expect(result.data[0]).toHaveProperty('fechaFormateada');
       expect(result.meta).toEqual({ total: 1, page: 1, limit: 20, totalPages: 1 });
     });
 
@@ -103,7 +104,8 @@ describe('AuditLogService', () => {
 
       const result = await service.findRecent(10);
 
-      expect(result).toEqual([mockLog]);
+      expect(result[0]).toMatchObject(mockLog);
+      expect(result[0]).toHaveProperty('fechaFormateada');
       expect(mockPrismaClient.auditLog.findMany).toHaveBeenCalledWith({
         orderBy: { fecha: 'desc' },
         take: 10,

@@ -62,12 +62,13 @@ describe('DashboardService', () => {
 
   describe('getRecentActivity', () => {
     it('should return recent audit log entries', async () => {
-      const mockLog = { id: 1, accion: 'CREACION' };
+      const mockLog = { id: 1, accion: 'CREACION', fecha: new Date('2026-04-11T12:00:00Z') };
       mockPrismaClient.auditLog.findMany.mockResolvedValue([mockLog]);
 
       const result = await service.getRecentActivity();
 
-      expect(result).toEqual([mockLog]);
+      expect(result[0]).toMatchObject({ id: 1, accion: 'CREACION' });
+      expect(result[0]).toHaveProperty('fechaFormateada');
       expect(mockPrismaClient.auditLog.findMany).toHaveBeenCalledWith({
         orderBy: { fecha: 'desc' },
         take: 10,

@@ -9,6 +9,8 @@ import {
   appointmentQuerySchema,
 } from './appointment.schema';
 import { AppError } from '../../common/errors';
+import { getClinicScope } from '../../common/helpers/clinic-scope';
+import { logFromRequest } from '../audit-log';
 
 export async function appointmentRoutes(fastify: FastifyInstance) {
   fastify.addHook('onRequest', authenticate);
@@ -16,6 +18,8 @@ export async function appointmentRoutes(fastify: FastifyInstance) {
   // GET /appointments - List appointments (paginated, with filters)
   fastify.get('/', async (request, reply) => {
     const query = appointmentQuerySchema.parse(request.query);
+    const clinicScope = getClinicScope(request);
+    if (clinicScope) query.clinicaId = clinicScope;
     const result = await appointmentService.findAll(query);
     return reply.send({ success: true, ...result });
   });
@@ -31,6 +35,7 @@ export async function appointmentRoutes(fastify: FastifyInstance) {
   fastify.post('/', async (request, reply) => {
     const input = createAppointmentSchema.parse(request.body);
     const appointment = await appointmentService.create(input);
+    logFromRequest(request, 'CREACION', 'Citas', `Cita creada para paciente ID ${input.pacienteId}`);
     return reply.status(201).send({ success: true, data: appointment });
   });
 
@@ -44,6 +49,7 @@ export async function appointmentRoutes(fastify: FastifyInstance) {
     }
 
     const appointment = await appointmentService.update(id, input);
+    logFromRequest(request, 'ACTUALIZACION', 'Citas', `Cita actualizada: ID ${id}`);
     return reply.send({ success: true, data: appointment });
   });
 
@@ -52,6 +58,7 @@ export async function appointmentRoutes(fastify: FastifyInstance) {
     const { id } = appointmentIdSchema.parse(request.params);
     const input = updateAppointmentStatusSchema.parse(request.body);
     const appointment = await appointmentService.updateStatus(id, input);
+    logFromRequest(request, 'ACTUALIZACION', 'Citas', `Estado de cita ID ${id} cambiado a ${input.estado}`);
     return reply.send({ success: true, data: appointment });
   });
 
@@ -59,6 +66,7 @@ export async function appointmentRoutes(fastify: FastifyInstance) {
   fastify.delete('/:id', async (request, reply) => {
     const { id } = appointmentIdSchema.parse(request.params);
     await appointmentService.delete(id);
+    logFromRequest(request, 'ELIMINACION', 'Citas', `Cita eliminada: ID ${id}`);
     return reply.status(204).send();
   });
 }

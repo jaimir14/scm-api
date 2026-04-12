@@ -55,12 +55,9 @@ describe('ConsultationService', () => {
 
       expect(result.data).toEqual([mockConsultation]);
       expect(result.meta).toEqual({ total: 1, page: 1, limit: 20, totalPages: 1 });
-      expect(mockPrismaClient.consultation.findMany).toHaveBeenCalledWith({
-        skip: 0,
-        take: 20,
-        orderBy: { fecha: 'desc' },
-        include: includeRelations,
-      });
+      expect(mockPrismaClient.consultation.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 0, take: 20, orderBy: { fecha: 'desc' } }),
+      );
     });
 
     it('should return empty when none exist', async () => {

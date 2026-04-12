@@ -1,9 +1,11 @@
 import { FastifyInstance } from 'fastify';
-import { authenticate } from '../auth';
+import { authenticate, requireAdmin } from '../auth';
 import { userService } from './user.service';
 import { createUserSchema, updateUserSchema, userIdSchema } from './user.schema';
 import { paginationSchema } from '../../common/schemas';
 import { AppError } from '../../common/errors';
+import { getClinicScope } from '../../common/helpers/clinic-scope';
+import { logFromRequest } from '../audit-log';
 import { generateUploadUrl, generateViewUrl, deleteObject } from '../../lib/s3';
 import { env } from '../../config';
 import { randomUUID } from 'crypto';
@@ -17,8 +19,22 @@ const userPhotoUploadSchema = z.object({
   fileSize: z.number().int().positive().max(MAX_IMAGE_SIZE, 'La imagen no puede superar 20MB'),
 });
 
+// Public (any authenticated user) user endpoints
+export async function userPublicRoutes(fastify: FastifyInstance) {
+  fastify.addHook('onRequest', authenticate);
+
+  // GET /users/doctors - List active users whose role has Portal Médico features
+  fastify.get('/doctors', async (request, reply) => {
+    const clinicaId = getClinicScope(request);
+    const doctors = await userService.findDoctors(clinicaId);
+    return reply.send({ success: true, data: doctors });
+  });
+}
+
+// Admin-only user endpoints
 export async function userRoutes(fastify: FastifyInstance) {
   fastify.addHook('onRequest', authenticate);
+  fastify.addHook('onRequest', requireAdmin);
 
   // GET /users - List all users (paginated)
   fastify.get('/', async (request, reply) => {
@@ -38,6 +54,7 @@ export async function userRoutes(fastify: FastifyInstance) {
   fastify.post('/', async (request, reply) => {
     const input = createUserSchema.parse(request.body);
     const user = await userService.create(input);
+    logFromRequest(request, 'CREACION', 'Usuarios', `Usuario creado: ${input.usuario}`);
     return reply.status(201).send({ success: true, data: user });
   });
 
@@ -51,6 +68,7 @@ export async function userRoutes(fastify: FastifyInstance) {
     }
 
     const user = await userService.update(id, input);
+    logFromRequest(request, 'ACTUALIZACION', 'Usuarios', `Usuario actualizado: ID ${id}`);
     return reply.send({ success: true, data: user });
   });
 
@@ -58,6 +76,7 @@ export async function userRoutes(fastify: FastifyInstance) {
   fastify.delete('/:id', async (request, reply) => {
     const { id } = userIdSchema.parse(request.params);
     await userService.delete(id);
+    logFromRequest(request, 'ELIMINACION', 'Usuarios', `Usuario eliminado: ID ${id}`);
     return reply.status(204).send();
   });
 

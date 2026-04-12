@@ -8,7 +8,7 @@ import { authRoutes } from './modules/auth';
 import { patientRoutes } from './modules/patients';
 import { clinicRoutes } from './modules/clinics';
 import { professionalRoutes } from './modules/professionals';
-import { userRoutes } from './modules/users';
+import { userRoutes, userPublicRoutes } from './modules/users';
 import { appointmentTypeRoutes } from './modules/appointment-types';
 import { treatmentRoutes } from './modules/treatments';
 import { consultationRoutes, patientConsultationRoutes } from './modules/consultations';
@@ -19,6 +19,8 @@ import { reportRoutes } from './modules/reports';
 import { configRoutes } from './modules/config';
 import { consultationImageRoutes } from './modules/consultation-images';
 import { patientFileRoutes } from './modules/patient-files';
+import { roleRoutes } from './modules/roles';
+import { featureRoutes } from './modules/features';
 import { env } from './config';
 import * as z from 'zod';
 
@@ -75,6 +77,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   app.register(patientRoutes, { prefix: '/api/v1/patients' });
   app.register(clinicRoutes, { prefix: '/api/v1/clinics' });
   app.register(professionalRoutes, { prefix: '/api/v1/professionals' });
+  app.register(userPublicRoutes, { prefix: '/api/v1/users' });
   app.register(userRoutes, { prefix: '/api/v1/users' });
   app.register(appointmentTypeRoutes, { prefix: '/api/v1/appointment-types' });
   app.register(treatmentRoutes, { prefix: '/api/v1/treatments' });
@@ -87,6 +90,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   app.register(configRoutes, { prefix: '/api/v1/config' });
   app.register(consultationImageRoutes, { prefix: '/api/v1/consultation-images' });
   app.register(patientFileRoutes, { prefix: '/api/v1/patient-files' });
+  app.register(roleRoutes, { prefix: '/api/v1/roles' });
+  app.register(featureRoutes, { prefix: '/api/v1/features' });
 
   return app;
 }

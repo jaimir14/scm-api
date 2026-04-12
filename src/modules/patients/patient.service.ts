@@ -13,18 +13,21 @@ const includeRelations = {
 };
 
 export class PatientService {
-  async findAll(query: PaginationQuery): Promise<PaginatedResponse<Patient>> {
+  async findAll(query: PaginationQuery, clinicaId?: number | null): Promise<PaginatedResponse<Patient>> {
     const { page, limit } = query;
     const skip = (page - 1) * limit;
 
+    const where = clinicaId ? { clinicaId } : {};
+
     const [data, total] = await Promise.all([
       prisma.patient.findMany({
+        where,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: includeRelations,
       }),
-      prisma.patient.count(),
+      prisma.patient.count({ where }),
     ]);
 
     return {
@@ -38,12 +41,15 @@ export class PatientService {
     };
   }
 
-  async search(query: PatientSearchQuery): Promise<Patient[]> {
+  async search(query: PatientSearchQuery, clinicaId?: number | null): Promise<Patient[]> {
     const { q, type } = query;
+
+    const clinicFilter = clinicaId ? { clinicaId } : {};
 
     if (type === 'cedula') {
       return prisma.patient.findMany({
         where: {
+          ...clinicFilter,
           numeroIdentificacion: { contains: q },
         },
         include: includeRelations,
@@ -55,6 +61,7 @@ export class PatientService {
     // Search by nombre (first name + last names)
     return prisma.patient.findMany({
       where: {
+        ...clinicFilter,
         OR: [
           { nombre: { contains: q } },
           { apellido1: { contains: q } },

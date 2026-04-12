@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { authenticate } from '../auth';
 import { reportService } from './report.service';
+import { getClinicScope } from '../../common/helpers/clinic-scope';
 import {
   appointmentReportSchema,
   patientReportSchema,
@@ -15,6 +16,8 @@ export async function reportRoutes(fastify: FastifyInstance) {
   // GET /reports/appointments
   fastify.get('/appointments', async (request, reply) => {
     const query = appointmentReportSchema.parse(request.query);
+    const clinicScope = getClinicScope(request);
+    if (clinicScope) query.clinicaId = clinicScope;
     const result = await reportService.appointmentReport(query);
     return reply.send({ success: true, ...result });
   });
@@ -22,6 +25,8 @@ export async function reportRoutes(fastify: FastifyInstance) {
   // GET /reports/patients
   fastify.get('/patients', async (request, reply) => {
     const query = patientReportSchema.parse(request.query);
+    const clinicScope = getClinicScope(request);
+    if (clinicScope) query.clinicaId = clinicScope;
     const result = await reportService.patientReport(query);
     return reply.send({ success: true, ...result });
   });

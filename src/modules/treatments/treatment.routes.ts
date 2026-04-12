@@ -3,6 +3,7 @@ import { authenticate } from '../auth';
 import { treatmentService } from './treatment.service';
 import { createTreatmentSchema, updateTreatmentSchema, treatmentIdSchema, treatmentQuerySchema } from './treatment.schema';
 import { AppError } from '../../common/errors';
+import { logFromRequest } from '../audit-log';
 
 export async function treatmentRoutes(fastify: FastifyInstance) {
   fastify.addHook('onRequest', authenticate);
@@ -31,6 +32,7 @@ export async function treatmentRoutes(fastify: FastifyInstance) {
   fastify.post('/', async (request, reply) => {
     const input = createTreatmentSchema.parse(request.body);
     const treatment = await treatmentService.create(input);
+    logFromRequest(request, 'CREACION', 'Tratamientos', `Tratamiento creado: ${input.nombre}`);
     return reply.status(201).send({ success: true, data: treatment });
   });
 
@@ -44,6 +46,7 @@ export async function treatmentRoutes(fastify: FastifyInstance) {
     }
 
     const treatment = await treatmentService.update(id, input);
+    logFromRequest(request, 'ACTUALIZACION', 'Tratamientos', `Tratamiento actualizado: ID ${id}`);
     return reply.send({ success: true, data: treatment });
   });
 
@@ -51,6 +54,7 @@ export async function treatmentRoutes(fastify: FastifyInstance) {
   fastify.delete('/:id', async (request, reply) => {
     const { id } = treatmentIdSchema.parse(request.params);
     await treatmentService.delete(id);
+    logFromRequest(request, 'ELIMINACION', 'Tratamientos', `Tratamiento eliminado: ID ${id}`);
     return reply.status(204).send();
   });
 }

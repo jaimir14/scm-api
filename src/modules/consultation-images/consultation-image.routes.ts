@@ -7,6 +7,7 @@ import {
   consultationIdParamSchema,
   imageIdParamSchema,
 } from './consultation-image.schema';
+import { logFromRequest } from '../audit-log';
 
 export async function consultationImageRoutes(fastify: FastifyInstance) {
   fastify.addHook('onRequest', authenticate);
@@ -22,6 +23,7 @@ export async function consultationImageRoutes(fastify: FastifyInstance) {
   fastify.post('/', async (request, reply) => {
     const input = registerImageSchema.parse(request.body);
     const image = await consultationImageService.register(input);
+    logFromRequest(request, 'CREACION', 'Imágenes', `Imagen subida: ${input.fileName} para consulta ID ${input.consultaId}`);
     return reply.status(201).send({ success: true, data: image });
   });
 
@@ -43,6 +45,7 @@ export async function consultationImageRoutes(fastify: FastifyInstance) {
   fastify.delete('/:id', async (request, reply) => {
     const { id } = imageIdParamSchema.parse(request.params);
     await consultationImageService.delete(id);
+    logFromRequest(request, 'ELIMINACION', 'Imágenes', `Imagen eliminada: ID ${id}`);
     return reply.status(204).send();
   });
 }

@@ -3,6 +3,7 @@ import { authenticate } from '../auth';
 import { professionalService } from './professional.service';
 import { professionalIdSchema } from './professional.schema';
 import { paginationSchema } from '../../common/schemas';
+import { getClinicScope } from '../../common/helpers/clinic-scope';
 
 export async function professionalRoutes(fastify: FastifyInstance) {
   fastify.addHook('onRequest', authenticate);
@@ -10,13 +11,15 @@ export async function professionalRoutes(fastify: FastifyInstance) {
   // GET /professionals - List all professionals (users with MEDICO role), paginated
   fastify.get('/', async (request, reply) => {
     const query = paginationSchema.parse(request.query);
-    const result = await professionalService.findAll(query);
+    const clinicaId = getClinicScope(request);
+    const result = await professionalService.findAll(query, clinicaId);
     return reply.send({ success: true, ...result });
   });
 
   // GET /professionals/active - Active professionals for dropdowns
   fastify.get('/active', async (request, reply) => {
-    const data = await professionalService.findActive();
+    const clinicaId = getClinicScope(request);
+    const data = await professionalService.findActive(clinicaId);
     return reply.send({ success: true, data });
   });
 

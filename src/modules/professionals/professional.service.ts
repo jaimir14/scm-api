@@ -3,8 +3,9 @@ import { NotFoundError } from '../../common/errors';
 import { PaginatedResponse, PaginationQuery } from '../../common/schemas';
 
 /**
- * ProfessionalService now queries the User model filtered by rol = 'MEDICO'.
- * The Professional model has been removed — professionals are users with the MEDICO role.
+ * ProfessionalService queries the User model filtered by role name containing 'Médico' or similar.
+ * With dynamic roles, we look for users whose role is typically a doctor-type role.
+ * We filter by the role relation instead of a hardcoded enum.
  */
 
 const selectProfessionalFields = {
@@ -16,13 +17,15 @@ const selectProfessionalFields = {
   createdAt: true,
   updatedAt: true,
   clinica: true,
+  rol: { select: { id: true, nombre: true } },
 };
 
 export class ProfessionalService {
-  async findAll(query: PaginationQuery): Promise<PaginatedResponse<unknown>> {
+  async findAll(query: PaginationQuery, clinicaId?: number | null): Promise<PaginatedResponse<unknown>> {
     const { page, limit } = query;
     const skip = (page - 1) * limit;
-    const where = { rol: 'MEDICO' as const };
+    const where: any = { especialidad: { not: null } };
+    if (clinicaId) where.clinicaId = clinicaId;
 
     const [data, total] = await Promise.all([
       prisma.user.findMany({
@@ -46,9 +49,11 @@ export class ProfessionalService {
     };
   }
 
-  async findActive(): Promise<unknown[]> {
+  async findActive(clinicaId?: number | null): Promise<unknown[]> {
+    const where: any = { especialidad: { not: null }, estado: true };
+    if (clinicaId) where.clinicaId = clinicaId;
     return prisma.user.findMany({
-      where: { rol: 'MEDICO', estado: true },
+      where,
       orderBy: { nombre: 'asc' },
       select: selectProfessionalFields,
     });

@@ -5,7 +5,11 @@ const validInput = {
   usuario: 'jdoe',
   nombre: 'John Doe',
   password: 'secret123',
-  rol: 'ADMINISTRADOR' as const,
+  rolId: 1,
+  tipoIdentificacion: 'CEDULA' as const,
+  numeroIdentificacion: '123456789',
+  sexo: 'MASCULINO' as const,
+  clinicaId: 1,
 };
 
 describe('createUserSchema', () => {
@@ -36,14 +40,15 @@ describe('createUserSchema', () => {
     expect(() => createUserSchema.parse({ ...validInput, password: 'A'.repeat(256) })).toThrow();
   });
 
-  it('should reject invalid rol', () => {
-    expect(() => createUserSchema.parse({ ...validInput, rol: 'INVALID' })).toThrow();
+  it('should reject invalid rolId', () => {
+    expect(() => createUserSchema.parse({ ...validInput, rolId: 0 })).toThrow();
+    expect(() => createUserSchema.parse({ ...validInput, rolId: -1 })).toThrow();
   });
 
-  it('should accept all valid rol values', () => {
-    for (const rol of ['ADMINISTRADOR', 'MEDICO', 'RECEPCION', 'ENFERMERIA'] as const) {
-      const result = createUserSchema.parse({ ...validInput, rol });
-      expect(result.rol).toBe(rol);
+  it('should accept valid rolId values', () => {
+    for (const rolId of [1, 2, 3, 4]) {
+      const result = createUserSchema.parse({ ...validInput, rolId });
+      expect(result.rolId).toBe(rolId);
     }
   });
 

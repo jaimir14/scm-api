@@ -88,12 +88,12 @@ describe('userReportSchema', () => {
   });
 
   it('should parse filters', () => {
-    const result = userReportSchema.parse({ rol: 'MEDICO', estado: 'true' });
-    expect(result.rol).toBe('MEDICO');
+    const result = userReportSchema.parse({ rolId: '1', estado: 'true' });
+    expect(result.rolId).toBe(1);
     expect(result.estado).toBe(true);
   });
 
-  it('should reject invalid rol', () => {
-    expect(() => userReportSchema.parse({ rol: 'INVALID' })).toThrow();
+  it('should reject invalid rolId', () => {
+    expect(() => userReportSchema.parse({ rolId: '0' })).toThrow();
   });
 });

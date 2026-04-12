@@ -5,8 +5,19 @@ import { AuditLogQuery } from './audit-log.schema';
 
 type AuditLog = Awaited<ReturnType<typeof prisma.auditLog.findFirstOrThrow>>;
 
+function formatEntry(entry: AuditLog) {
+  return {
+    ...entry,
+    fechaFormateada: entry.fecha.toLocaleString('es-CR', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      timeZone: 'America/Costa_Rica',
+    }),
+  };
+}
+
 export class AuditLogService {
-  async findAll(query: AuditLogQuery): Promise<PaginatedResponse<AuditLog>> {
+  async findAll(query: AuditLogQuery): Promise<PaginatedResponse<any>> {
     const { page, limit, fechaDesde, fechaHasta, usuarioId, modulo, accion } = query;
     const skip = (page - 1) * limit;
 
@@ -44,7 +55,7 @@ export class AuditLogService {
     ]);
 
     return {
-      data,
+      data: data.map(formatEntry),
       meta: {
         total,
         page,
@@ -54,11 +65,12 @@ export class AuditLogService {
     };
   }
 
-  async findRecent(limit: number = 10): Promise<AuditLog[]> {
-    return prisma.auditLog.findMany({
+  async findRecent(limit: number = 10) {
+    const data = await prisma.auditLog.findMany({
       orderBy: { fecha: 'desc' },
       take: limit,
     });
+    return data.map(formatEntry);
   }
 }
 

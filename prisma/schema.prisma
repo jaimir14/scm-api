@@ -27,13 +27,6 @@ enum EstadoCivil {
   VIUDO
 }
 
-enum Rol {
-  ADMINISTRADOR
-  MEDICO
-  RECEPCION
-  ENFERMERIA
-}
-
 enum CategoriaTratamiento {
   PREVENTIVO
   CIRUGIA
@@ -73,21 +66,75 @@ model Clinic {
   @@map("clinics")
 }
 
-model User {
-  id           Int       @id @default(autoincrement())
-  usuario      String    @unique @db.VarChar(100)
-  nombre       String    @db.VarChar(255)
-  password     String    @db.VarChar(255)
-  rol          Rol
-  especialidad String?   @db.VarChar(255)
-  clinicaId    Int?      @map("clinica_id")
-  fotografia   String?   @db.VarChar(500)
-  estado       Boolean   @default(true)
-  ultimoAcceso DateTime? @map("ultimo_acceso")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+model Role {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique @db.VarChar(100)
+  descripcion String?  @db.Text
+  esAdmin     Boolean  @default(false) @map("es_admin")
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  clinica       Clinic?        @relation(fields: [clinicaId], references: [id])
+  users    User[]
+  features RoleFeature[]
+
+  @@map("roles")
+}
+
+model Feature {
+  id          Int      @id @default(autoincrement())
+  clave       String   @unique @db.VarChar(100)
+  nombre      String   @db.VarChar(200)
+  descripcion String?  @db.Text
+  modulo      String   @db.VarChar(100)
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  roles RoleFeature[]
+
+  @@map("features")
+}
+
+model RoleFeature {
+  id        Int @id @default(autoincrement())
+  rolId     Int @map("rol_id")
+  featureId Int @map("feature_id")
+
+  rol     Role    @relation(fields: [rolId], references: [id], onDelete: Cascade)
+  feature Feature @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@unique([rolId, featureId])
+  @@map("role_features")
+}
+
+model User {
+  id                     Int                @id @default(autoincrement())
+  usuario                String             @unique @db.VarChar(100)
+  nombre                 String             @db.VarChar(255)
+  password               String             @db.VarChar(255)
+  rolId                  Int                @map("rol_id")
+  tipoIdentificacion     TipoIdentificacion @map("tipo_identificacion")
+  numeroIdentificacion   String             @map("numero_identificacion") @db.VarChar(50)
+  sexo                   Sexo
+  especialidad           String?            @db.VarChar(255)
+  clinicaId              Int                @map("clinica_id")
+  fotografia             String?            @db.VarChar(500)
+  // Doctor-specific fields
+  codigoProfesional      String?            @map("codigo_profesional") @db.VarChar(100)
+  duracionCitas          Int?               @map("duracion_citas")
+  color                  String?            @db.VarChar(7)
+  // Google Calendar integration (doctor-specific)
+  googleCalendarActivo   Boolean            @default(false) @map("google_calendar_activo")
+  googleCalendarEmail    String?            @map("google_calendar_email") @db.VarChar(255)
+  googleClientId         String?            @map("google_client_id") @db.VarChar(500)
+  googleClientSecret     String?            @map("google_client_secret") @db.VarChar(500)
+  estado                 Boolean            @default(true)
+  ultimoAcceso           DateTime?          @map("ultimo_acceso")
+  createdAt              DateTime           @default(now()) @map("created_at")
+  updatedAt              DateTime           @updatedAt @map("updated_at")
+
+  rol           Role           @relation(fields: [rolId], references: [id])
+  clinica       Clinic         @relation(fields: [clinicaId], references: [id])
   patients      Patient[]
   consultations Consultation[]
   appointments  Appointment[]

@@ -6,14 +6,23 @@ import { CreateUserInput, UpdateUserInput } from './user.schema';
 
 type User = Awaited<ReturnType<typeof prisma.user.findFirstOrThrow>>;
 
-// Omit password from responses
-function omitPassword(user: User): Omit<User, 'password'> {
-  const { password: _, ...rest } = user;
-  return rest;
+const includeRelations = {
+  clinica: true,
+  rol: true,
+};
+
+// Omit password from responses and flatten role name
+function formatUser(user: any): Omit<any, 'password'> {
+  const { password: _, rol: rolRelation, ...rest } = user;
+  return {
+    ...rest,
+    rol: rolRelation?.nombre ?? null,
+    esAdmin: rolRelation?.esAdmin ?? false,
+  };
 }
 
 export class UserService {
-  async findAll(query: PaginationQuery): Promise<PaginatedResponse<Omit<User, 'password'>>> {
+  async findAll(query: PaginationQuery): Promise<PaginatedResponse<any>> {
     const { page, limit } = query;
     const skip = (page - 1) * limit;
 
@@ -22,13 +31,13 @@ export class UserService {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: { clinica: true },
+        include: includeRelations,
       }),
       prisma.user.count(),
     ]);
 
     return {
-      data: data.map(omitPassword),
+      data: data.map(formatUser),
       meta: {
         total,
         page,
@@ -38,37 +47,44 @@ export class UserService {
     };
   }
 
-  async findById(id: number): Promise<Omit<User, 'password'>> {
+  async findById(id: number) {
     const user = await prisma.user.findUnique({
       where: { id },
-      include: { clinica: true },
+      include: includeRelations,
     });
     if (!user) {
       throw new NotFoundError('User');
     }
-    return omitPassword(user);
+    return formatUser(user);
   }
 
-  async findByUsuario(usuario: string): Promise<User | null> {
-    return prisma.user.findUnique({ where: { usuario } });
+  async findByUsuario(usuario: string) {
+    return prisma.user.findUnique({
+      where: { usuario },
+      include: includeRelations,
+    });
   }
 
-  async create(input: CreateUserInput): Promise<Omit<User, 'password'>> {
+  async create(input: CreateUserInput) {
     const hashedPassword = await bcrypt.hash(input.password, 10);
     const user = await prisma.user.create({
       data: {
         ...input,
         password: hashedPassword,
       },
-      include: { clinica: true },
+      include: includeRelations,
     });
-    return omitPassword(user);
+    return formatUser(user);
   }
 
-  async update(id: number, input: UpdateUserInput): Promise<Omit<User, 'password'>> {
-    await this.findById(id);
+  async update(id: number, input: UpdateUserInput) {
+    // Verify exists
+    const existing = await prisma.user.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundError('User');
+    }
 
-    const data: UpdateUserInput = { ...input };
+    const data: any = { ...input };
     if (input.password) {
       data.password = await bcrypt.hash(input.password, 10);
     }
@@ -76,14 +92,45 @@ export class UserService {
     const user = await prisma.user.update({
       where: { id },
       data,
-      include: { clinica: true },
+      include: includeRelations,
     });
-    return omitPassword(user);
+    return formatUser(user);
   }
 
   async delete(id: number): Promise<void> {
-    await this.findById(id);
+    const existing = await prisma.user.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundError('User');
+    }
     await prisma.user.delete({ where: { id } });
+  }
+
+  async findDoctors(clinicaId?: number | null) {
+    const DOCTOR_FEATURE_KEYS = ['doctor.dashboard', 'doctor.agenda', 'doctor.pacientes'];
+
+    // Find role IDs that have any Portal Médico feature assigned
+    const roleFeatures = await prisma.roleFeature.findMany({
+      where: {
+        feature: { clave: { in: DOCTOR_FEATURE_KEYS } },
+      },
+      select: { rolId: true },
+    });
+
+    const rolIds = [...new Set(roleFeatures.map(rf => rf.rolId))];
+    if (rolIds.length === 0) return [];
+
+    const users = await prisma.user.findMany({
+      where: {
+        estado: true,
+        rolId: { in: rolIds },
+        rol: { activo: true },
+        ...(clinicaId ? { clinicaId } : {}),
+      },
+      orderBy: { nombre: 'asc' },
+      include: includeRelations,
+    });
+
+    return users.map(formatUser);
   }
 
   async updateLastAccess(id: number): Promise<void> {

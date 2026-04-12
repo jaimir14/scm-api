@@ -9,7 +9,7 @@ type Appointment = Awaited<ReturnType<typeof prisma.appointment.findFirstOrThrow
 const includeRelations = {
   paciente: true,
   profesional: {
-    select: { id: true, nombre: true, especialidad: true, clinicaId: true, clinica: true },
+    select: { id: true, nombre: true, especialidad: true, clinicaId: true, clinica: true, color: true },
   },
   tipoCita: true,
 };
@@ -99,7 +99,7 @@ export class AppointmentService {
     await prisma.appointment.delete({ where: { id } });
   }
 
-  async findUpcomingToday(limit: number = 5): Promise<Appointment[]> {
+  async findUpcomingToday(limit: number = 5, clinicaId?: number | null): Promise<Appointment[]> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -109,6 +109,7 @@ export class AppointmentService {
       where: {
         fecha: { gte: today, lt: tomorrow },
         estado: 'PENDIENTE',
+        ...(clinicaId ? { profesional: { clinicaId } } : {}),
       },
       orderBy: { horaInicio: 'asc' },
       take: limit,

@@ -19,9 +19,13 @@ describe('Auth Routes', () => {
     usuario: 'admin',
     nombre: 'Admin User',
     password: hashedPassword,
-    rol: 'ADMINISTRADOR',
+    rolId: 1,
+    rol: { id: 1, nombre: 'Administrador', esAdmin: true },
+    tipoIdentificacion: 'CEDULA',
+    numeroIdentificacion: '101010101',
+    sexo: 'MASCULINO',
     especialidad: null,
-    clinicaId: null,
+    clinicaId: 1,
     estado: true,
     ultimoAcceso: null,
     createdAt: new Date('2026-01-01'),
@@ -33,7 +37,11 @@ describe('Auth Routes', () => {
     usuario: 'drcarlos',
     nombre: 'Dr. Carlos',
     password: hashedPassword,
-    rol: 'MEDICO',
+    rolId: 2,
+    rol: { id: 2, nombre: 'Medico', esAdmin: false },
+    tipoIdentificacion: 'CEDULA',
+    numeroIdentificacion: '202020202',
+    sexo: 'MASCULINO',
     especialidad: 'Odontologia General',
     clinicaId: 1,
     estado: true,
@@ -149,7 +157,7 @@ describe('Auth Routes', () => {
       expect(body.data.user.clinicaId).toBe(1);
     });
 
-    it('should not include especialidad for non-MEDICO users', async () => {
+    it('should include null especialidad for non-MEDICO users', async () => {
       mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
       mockPrismaClient.user.update.mockResolvedValue(mockUser);
 
@@ -162,8 +170,8 @@ describe('Auth Routes', () => {
 
       const body = JSON.parse(res.body);
       expect(res.statusCode).toBe(200);
-      expect(body.data.user).not.toHaveProperty('especialidad');
-      expect(body.data.user).not.toHaveProperty('clinicaId');
+      expect(body.data.user.especialidad).toBeNull();
+      expect(body.data.user.clinicaId).toBe(1);
     });
 
     it('should return 400 for missing credentials', async () => {
@@ -180,7 +188,7 @@ describe('Auth Routes', () => {
 
   describe('GET /api/v1/auth/me', () => {
     it('should return current user info from token', async () => {
-      const token = getTestToken(app, { sub: '1', role: 'ADMINISTRADOR' });
+      const token = getTestToken(app, { sub: '1', rol: 'Administrador' });
 
       const res = await app.inject({
         method: 'GET',
@@ -192,7 +200,7 @@ describe('Auth Routes', () => {
       expect(res.statusCode).toBe(200);
       expect(body.success).toBe(true);
       expect(body.data.id).toBe(1);
-      expect(body.data.rol).toBe('ADMINISTRADOR');
+      expect(body.data.rol).toBe('Administrador');
     });
 
     it('should return 401 without token', async () => {

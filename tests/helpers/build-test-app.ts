@@ -51,7 +51,14 @@ export async function buildTestApp(): Promise<FastifyInstance> {
  */
 export function getTestToken(
   app: FastifyInstance,
-  payload?: { sub: string; role: string },
+  payload?: Partial<{ sub: string; rolId: number; rol: string; esAdmin: boolean; nombre: string }>,
 ): string {
-  return app.jwt.sign(payload ?? { sub: 'test-user-1', role: 'admin' });
+  return app.jwt.sign({
+    sub: 'test-user-1',
+    rolId: 1,
+    rol: 'Administrador',
+    esAdmin: true,
+    nombre: 'Test User',
+    ...payload,
+  });
 }

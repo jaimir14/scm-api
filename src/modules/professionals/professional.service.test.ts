@@ -37,7 +37,7 @@ describe('ProfessionalService', () => {
       expect(result.meta).toEqual({ total: 1, page: 1, limit: 20, totalPages: 1 });
       expect(mockPrismaClient.user.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { rol: 'MEDICO' },
+          where: { especialidad: { not: null } },
           skip: 0,
           take: 20,
         }),
@@ -77,7 +77,7 @@ describe('ProfessionalService', () => {
       expect(result).toEqual([mockProfessional]);
       expect(mockPrismaClient.user.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { rol: 'MEDICO', estado: true },
+          where: { especialidad: { not: null }, estado: true },
           orderBy: { nombre: 'asc' },
         }),
       );

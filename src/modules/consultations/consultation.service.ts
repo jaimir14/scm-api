@@ -13,18 +13,21 @@ const includeRelations = {
 };
 
 export class ConsultationService {
-  async findAll(query: PaginationQuery): Promise<PaginatedResponse<Consultation>> {
+  async findAll(query: PaginationQuery, clinicaId?: number | null): Promise<PaginatedResponse<Consultation>> {
     const { page, limit } = query;
     const skip = (page - 1) * limit;
 
+    const where = clinicaId ? { profesional: { clinicaId } } : {};
+
     const [data, total] = await Promise.all([
       prisma.consultation.findMany({
+        where,
         skip,
         take: limit,
         orderBy: { fecha: 'desc' },
         include: includeRelations,
       }),
-      prisma.consultation.count(),
+      prisma.consultation.count({ where }),
     ]);
 
     return {

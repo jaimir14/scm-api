@@ -163,10 +163,10 @@ describe('ReportService', () => {
       mockPrismaClient.user.findMany.mockResolvedValue([]);
       mockPrismaClient.user.count.mockResolvedValue(0);
 
-      await service.userReport({ rol: 'ADMINISTRADOR' });
+      await service.userReport({ rolId: 1 });
 
       const call = mockPrismaClient.user.findMany.mock.calls[0][0];
-      expect(call.where.rol).toBe('ADMINISTRADOR');
+      expect(call.where.rolId).toBe(1);
     });
 
     it('should apply estado filter', async () => {

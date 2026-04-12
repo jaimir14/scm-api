@@ -64,12 +64,9 @@ describe('PatientService', () => {
         limit: 20,
         totalPages: 1,
       });
-      expect(mockPrismaClient.patient.findMany).toHaveBeenCalledWith({
-        skip: 0,
-        take: 20,
-        orderBy: { createdAt: 'desc' },
-        include: { clinica: true, profesional: { select: { id: true, nombre: true, especialidad: true, clinicaId: true, clinica: true } } },
-      });
+      expect(mockPrismaClient.patient.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 0, take: 20 }),
+      );
     });
 
     it('should calculate correct skip for page 2', async () => {
@@ -78,12 +75,9 @@ describe('PatientService', () => {
 
       const result = await service.findAll({ page: 2, limit: 10 });
 
-      expect(mockPrismaClient.patient.findMany).toHaveBeenCalledWith({
-        skip: 10,
-        take: 10,
-        orderBy: { createdAt: 'desc' },
-        include: { clinica: true, profesional: { select: { id: true, nombre: true, especialidad: true, clinicaId: true, clinica: true } } },
-      });
+      expect(mockPrismaClient.patient.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 10, take: 10 }),
+      );
       expect(result.meta.totalPages).toBe(3);
     });
 

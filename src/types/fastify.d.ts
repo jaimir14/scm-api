@@ -4,13 +4,21 @@ declare module '@fastify/jwt' {
   interface FastifyJWT {
     payload: {
       sub: string;
-      role: string;
-      nombre?: string;
+      rolId: number;
+      rol: string;
+      esAdmin: boolean;
+      nombre: string;
+      especialidad?: string | null;
+      clinicaId?: number | null;
     };
     user: {
       sub: string;
-      role: string;
-      nombre?: string;
+      rolId: number;
+      rol: string;
+      esAdmin: boolean;
+      nombre: string;
+      especialidad?: string | null;
+      clinicaId?: number | null;
     };
   }
 }
