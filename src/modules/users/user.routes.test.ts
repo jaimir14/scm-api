@@ -17,7 +17,7 @@ describe('User Routes', () => {
     id: 1,
     usuario: 'jdoe',
     nombre: 'John Doe',
-    password: '$2a$10$hashedpassword',
+    passwordHash: '$2a$10$hashedpassword',
     rolId: 1,
     rol: { id: 1, nombre: 'Administrador', esAdmin: true },
     tipoIdentificacion: 'CEDULA',
@@ -71,7 +71,7 @@ describe('User Routes', () => {
       expect(res.statusCode).toBe(200);
       expect(body.success).toBe(true);
       expect(body.data).toHaveLength(1);
-      expect(body.data[0]).not.toHaveProperty('password');
+      expect(body.data[0]).not.toHaveProperty('passwordHash');
     });
 
     it('should return 401 without token', async () => {
@@ -96,7 +96,7 @@ describe('User Routes', () => {
       const body = JSON.parse(res.body);
       expect(res.statusCode).toBe(200);
       expect(body.data.usuario).toBe('jdoe');
-      expect(body.data).not.toHaveProperty('password');
+      expect(body.data).not.toHaveProperty('passwordHash');
     });
 
     it('should return 404 when not found', async () => {
@@ -125,7 +125,7 @@ describe('User Routes', () => {
       const body = JSON.parse(res.body);
       expect(res.statusCode).toBe(201);
       expect(body.success).toBe(true);
-      expect(body.data).not.toHaveProperty('password');
+      expect(body.data).not.toHaveProperty('passwordHash');
     });
 
     it('should return 400 for missing required fields', async () => {
@@ -163,7 +163,7 @@ describe('User Routes', () => {
 
       const body = JSON.parse(res.body);
       expect(res.statusCode).toBe(200);
-      expect(body.data).not.toHaveProperty('password');
+      expect(body.data).not.toHaveProperty('passwordHash');
     });
 
     it('should return 400 when no fields provided', async () => {

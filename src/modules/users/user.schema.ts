@@ -14,6 +14,8 @@ export const createUserSchema = z.object({
   especialidad: z.string().min(1).max(255).optional().nullable(),
   clinicaId: z.number().int().positive(),
   fotografia: z.string().max(500).optional().nullable(),
+  email: z.preprocess(v => (v === '' ? null : v), z.string().email('Correo electrónico inválido').max(255).optional().nullable()),
+  telefono: z.preprocess(v => (v === '' ? null : v), z.string().regex(/^[2678]\d{3}-?\d{4}$/, 'Teléfono costarricense inválido').optional().nullable()),
   // Doctor-specific
   codigoProfesional: z.string().max(100).optional().nullable(),
   duracionCitas: z.number().int().positive().optional().nullable(),
@@ -37,6 +39,8 @@ export const updateUserSchema = z.object({
   especialidad: z.string().min(1).max(255).optional().nullable(),
   clinicaId: z.number().int().positive().optional(),
   fotografia: z.string().max(500).optional().nullable(),
+  email: z.preprocess(v => (v === '' ? null : v), z.string().email('Correo electrónico inválido').max(255).optional().nullable()),
+  telefono: z.preprocess(v => (v === '' ? null : v), z.string().regex(/^[2678]\d{3}-?\d{4}$/, 'Teléfono costarricense inválido').optional().nullable()),
   // Doctor-specific
   codigoProfesional: z.string().max(100).optional().nullable(),
   duracionCitas: z.number().int().positive().optional().nullable(),

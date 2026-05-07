@@ -14,7 +14,7 @@ describe('UserService', () => {
     id: 1,
     usuario: 'jdoe',
     nombre: 'John Doe',
-    password: '$2a$10$hashedpassword',
+    passwordHash: '$2a$10$hashedpassword',
     rolId: 1,
     rol: { id: 1, nombre: 'Administrador', esAdmin: true },
     tipoIdentificacion: 'CEDULA',
@@ -42,7 +42,7 @@ describe('UserService', () => {
       const result = await service.findAll({ page: 1, limit: 20 });
 
       expect(result.data).toHaveLength(1);
-      expect(result.data[0]).not.toHaveProperty('password');
+      expect(result.data[0]).not.toHaveProperty('passwordHash');
       expect(result.data[0].usuario).toBe('jdoe');
       expect(result.meta).toEqual({ total: 1, page: 1, limit: 20, totalPages: 1 });
     });
@@ -69,7 +69,7 @@ describe('UserService', () => {
 
       const result = await service.findById(1);
 
-      expect(result).not.toHaveProperty('password');
+      expect(result).not.toHaveProperty('passwordHash');
       expect(result.usuario).toBe('jdoe');
       expect(mockPrismaClient.user.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
@@ -85,12 +85,12 @@ describe('UserService', () => {
   });
 
   describe('findByUsuario', () => {
-    it('should return user with password when found', async () => {
+    it('should return user with passwordHash when found', async () => {
       mockPrismaClient.user.findUnique.mockResolvedValue(mockUser);
 
       const result = await service.findByUsuario('jdoe');
 
-      expect(result).toHaveProperty('password');
+      expect(result).toHaveProperty('passwordHash');
       expect(mockPrismaClient.user.findUnique).toHaveBeenCalledWith({
         where: { usuario: 'jdoe' },
         include: { clinica: true, rol: true },
@@ -123,11 +123,11 @@ describe('UserService', () => {
 
       const result = await service.create(input);
 
-      expect(result).not.toHaveProperty('password');
+      expect(result).not.toHaveProperty('passwordHash');
       // Verify bcrypt hash was used (password arg should be hashed, not plaintext)
       const createCall = mockPrismaClient.user.create.mock.calls[0][0];
-      expect(createCall.data.password).not.toBe('secret123');
-      expect(createCall.data.password).toMatch(/^\$2[aby]\$/);
+      expect(createCall.data.passwordHash).not.toBe('secret123');
+      expect(createCall.data.passwordHash).toMatch(/^\$2[aby]\$/);
     });
   });
 
@@ -139,7 +139,7 @@ describe('UserService', () => {
 
       const result = await service.update(1, input);
 
-      expect(result).not.toHaveProperty('password');
+      expect(result).not.toHaveProperty('passwordHash');
       expect(mockPrismaClient.user.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: input,
@@ -155,8 +155,8 @@ describe('UserService', () => {
       await service.update(1, input);
 
       const updateCall = mockPrismaClient.user.update.mock.calls[0][0];
-      expect(updateCall.data.password).not.toBe('newpass123');
-      expect(updateCall.data.password).toMatch(/^\$2[aby]\$/);
+      expect(updateCall.data.passwordHash).not.toBe('newpass123');
+      expect(updateCall.data.passwordHash).toMatch(/^\$2[aby]\$/);
     });
 
     it('should throw NotFoundError when updating non-existent user', async () => {

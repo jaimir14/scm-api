@@ -1,11 +1,11 @@
 import { FastifyInstance } from 'fastify';
-import bcrypt from 'bcryptjs';
-import { loginSchema } from './auth.schema';
+import { loginSchema, changePasswordSchema } from './auth.schema';
 import { authenticate } from './auth.guard';
 import { userService } from '../users/user.service';
 import { UnauthorizedError } from '../../common/errors';
 import { prisma } from '../../database';
 import { logActivity } from '../audit-log';
+import { hashPassword, verifyPassword } from './password.utils';
 
 /**
  * Auth routes - login, token generation (dev), current user info, and permissions.
@@ -46,7 +46,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       throw new UnauthorizedError('User account is disabled');
     }
 
-    const validPassword = await bcrypt.compare(password, user.password);
+    const validPassword = await verifyPassword(password, user.passwordHash);
     if (!validPassword) {
       throw new UnauthorizedError('Invalid credentials');
     }
@@ -114,6 +114,38 @@ export async function authRoutes(fastify: FastifyInstance) {
         clinicaId: payload.clinicaId ?? null,
       },
     });
+  });
+
+  // POST /auth/change-password - Change password for the authenticated user
+  fastify.post('/change-password', { onRequest: [authenticate] }, async (request, reply) => {
+    const { currentPassword, newPassword } = changePasswordSchema.parse(request.body);
+    const userId = parseInt(request.user.sub);
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedError('Invalid credentials');
+    }
+
+    const isCurrentValid = await verifyPassword(currentPassword, user.passwordHash);
+    if (!isCurrentValid) {
+      throw new UnauthorizedError('Invalid credentials');
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: await hashPassword(newPassword) },
+    });
+
+    logActivity({
+      usuarioId: userId,
+      usuario: user.nombre,
+      accion: 'ACTUALIZACION',
+      modulo: 'Autenticación',
+      ip: request.ip,
+      detalle: `Cambio de contraseña: ${user.usuario}`,
+    });
+
+    return reply.send({ success: true, data: null });
   });
 
   // GET /auth/my-permissions - Get feature keys for the current user's role

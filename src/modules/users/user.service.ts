@@ -1,8 +1,8 @@
-import bcrypt from 'bcryptjs';
 import { prisma } from '../../database';
 import { NotFoundError } from '../../common/errors';
 import { PaginatedResponse, PaginationQuery } from '../../common/schemas';
 import { CreateUserInput, UpdateUserInput } from './user.schema';
+import { hashPassword } from '../auth/password.utils';
 
 type User = Awaited<ReturnType<typeof prisma.user.findFirstOrThrow>>;
 
@@ -11,9 +11,9 @@ const includeRelations = {
   rol: true,
 };
 
-// Omit password from responses and flatten role name
-function formatUser(user: any): Omit<any, 'password'> {
-  const { password: _, rol: rolRelation, ...rest } = user;
+// Omit passwordHash from responses and flatten role name
+function formatUser(user: any): Omit<any, 'passwordHash'> {
+  const { passwordHash: _, rol: rolRelation, ...rest } = user;
   return {
     ...rest,
     rol: rolRelation?.nombre ?? null,
@@ -66,11 +66,11 @@ export class UserService {
   }
 
   async create(input: CreateUserInput) {
-    const hashedPassword = await bcrypt.hash(input.password, 10);
+    const { password, ...rest } = input;
     const user = await prisma.user.create({
       data: {
-        ...input,
-        password: hashedPassword,
+        ...rest,
+        passwordHash: await hashPassword(password),
       },
       include: includeRelations,
     });
@@ -84,9 +84,10 @@ export class UserService {
       throw new NotFoundError('User');
     }
 
-    const data: any = { ...input };
-    if (input.password) {
-      data.password = await bcrypt.hash(input.password, 10);
+    const { password, ...rest } = input;
+    const data: any = { ...rest };
+    if (password) {
+      data.passwordHash = await hashPassword(password);
     }
 
     const user = await prisma.user.update({
