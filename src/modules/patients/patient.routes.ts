@@ -2,7 +2,6 @@ import { FastifyInstance } from 'fastify';
 import { authenticate } from '../auth';
 import { patientService } from './patient.service';
 import { createPatientSchema, updatePatientSchema, patientIdSchema, patientSearchSchema, profesionalIdParamSchema } from './patient.schema';
-import { paginationSchema } from '../../common/schemas';
 import { AppError } from '../../common/errors';
 import { getClinicScope } from '../../common/helpers/clinic-scope';
 import { logFromRequest } from '../audit-log';
@@ -11,9 +10,9 @@ export async function patientRoutes(fastify: FastifyInstance) {
   // All patient routes require authentication
   fastify.addHook('onRequest', authenticate);
 
-  // GET /patients - List all patients (paginated)
+  // GET /patients - List all patients (paginated, optional filter)
   fastify.get('/', async (request, reply) => {
-    const query = paginationSchema.parse(request.query);
+    const query = patientSearchSchema.parse(request.query);
     const clinicaId = getClinicScope(request);
     const result = await patientService.findAll(query, clinicaId);
     return reply.send({ success: true, ...result });
@@ -26,12 +25,12 @@ export async function patientRoutes(fastify: FastifyInstance) {
     return reply.send({ success: true, data });
   });
 
-  // GET /patients/search - Search patients by nombre or cedula
+  // GET /patients/search - Search patients by nombre or cedula (paginated)
   fastify.get('/search', async (request, reply) => {
     const query = patientSearchSchema.parse(request.query);
     const clinicaId = getClinicScope(request);
-    const data = await patientService.search(query, clinicaId);
-    return reply.send({ success: true, data });
+    const result = await patientService.search(query, clinicaId);
+    return reply.send({ success: true, ...result });
   });
 
   // GET /patients/:id - Get a single patient

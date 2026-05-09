@@ -67,8 +67,10 @@ export const patientIdSchema = z.object({
 });
 
 export const patientSearchSchema = z.object({
-  q: z.string().min(1, 'Search term is required'),
+  q: z.string().optional().default(''),
   type: z.enum(['nombre', 'cedula']).default('nombre'),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(25),
 });
 
 export const profesionalIdParamSchema = z.object({
@@ -78,3 +80,4 @@ export const profesionalIdParamSchema = z.object({
 export type CreatePatientInput = z.infer<typeof createPatientSchema>;
 export type UpdatePatientInput = z.infer<typeof updatePatientSchema>;
 export type PatientSearchQuery = z.infer<typeof patientSearchSchema>;
+export type PatientListQuery = z.infer<typeof patientSearchSchema>;

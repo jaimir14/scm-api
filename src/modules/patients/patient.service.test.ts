@@ -55,7 +55,7 @@ describe('PatientService', () => {
       mockPrismaClient.patient.findMany.mockResolvedValue(patients);
       mockPrismaClient.patient.count.mockResolvedValue(1);
 
-      const result = await service.findAll({ page: 1, limit: 20 });
+      const result = await service.findAll({ page: 1, limit: 20, q: '', type: 'nombre' });
 
       expect(result.data).toEqual(patients);
       expect(result.meta).toEqual({
@@ -73,7 +73,7 @@ describe('PatientService', () => {
       mockPrismaClient.patient.findMany.mockResolvedValue([]);
       mockPrismaClient.patient.count.mockResolvedValue(25);
 
-      const result = await service.findAll({ page: 2, limit: 10 });
+      const result = await service.findAll({ page: 2, limit: 10, q: '', type: 'nombre' });
 
       expect(mockPrismaClient.patient.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ skip: 10, take: 10 }),
@@ -85,7 +85,7 @@ describe('PatientService', () => {
       mockPrismaClient.patient.findMany.mockResolvedValue([]);
       mockPrismaClient.patient.count.mockResolvedValue(0);
 
-      const result = await service.findAll({ page: 1, limit: 20 });
+      const result = await service.findAll({ page: 1, limit: 20, q: '', type: 'nombre' });
 
       expect(result.data).toEqual([]);
       expect(result.meta.total).toBe(0);
@@ -96,38 +96,39 @@ describe('PatientService', () => {
   describe('search', () => {
     it('should search patients by nombre', async () => {
       mockPrismaClient.patient.findMany.mockResolvedValue([mockPatient]);
+      mockPrismaClient.patient.count.mockResolvedValue(1);
 
-      const result = await service.search({ q: 'Maria', type: 'nombre' });
+      const result = await service.search({ q: 'Maria', type: 'nombre', page: 1, limit: 25 });
 
-      expect(result).toEqual([mockPatient]);
-      expect(mockPrismaClient.patient.findMany).toHaveBeenCalledWith({
-        where: {
-          OR: [
-            { nombre: { contains: 'Maria' } },
-            { apellido1: { contains: 'Maria' } },
-            { apellido2: { contains: 'Maria' } },
-          ],
-        },
-        include: { clinica: true, profesional: { select: { id: true, nombre: true, especialidad: true, clinicaId: true, clinica: true } } },
-        take: 20,
-        orderBy: { nombre: 'asc' },
-      });
+      expect(result.data).toEqual([mockPatient]);
+      expect(result.meta.total).toBe(1);
+      expect(mockPrismaClient.patient.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: [
+              { nombre: { contains: 'Maria' } },
+              { apellido1: { contains: 'Maria' } },
+              { apellido2: { contains: 'Maria' } },
+            ],
+          }),
+        }),
+      );
     });
 
     it('should search patients by cedula', async () => {
       mockPrismaClient.patient.findMany.mockResolvedValue([mockPatient]);
+      mockPrismaClient.patient.count.mockResolvedValue(1);
 
-      const result = await service.search({ q: '123456', type: 'cedula' });
+      const result = await service.search({ q: '123456', type: 'cedula', page: 1, limit: 25 });
 
-      expect(result).toEqual([mockPatient]);
-      expect(mockPrismaClient.patient.findMany).toHaveBeenCalledWith({
-        where: {
-          numeroIdentificacion: { contains: '123456' },
-        },
-        include: { clinica: true, profesional: { select: { id: true, nombre: true, especialidad: true, clinicaId: true, clinica: true } } },
-        take: 20,
-        orderBy: { nombre: 'asc' },
-      });
+      expect(result.data).toEqual([mockPatient]);
+      expect(mockPrismaClient.patient.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            numeroIdentificacion: { contains: '123456' },
+          }),
+        }),
+      );
     });
   });
 

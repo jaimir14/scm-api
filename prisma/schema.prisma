@@ -182,6 +182,9 @@ model Patient {
   appointments  Appointment[]
   files         PatientFile[]
 
+  @@index([clinicaId, createdAt(sort: Desc)])
+  @@index([clinicaId, nombre, apellido1, apellido2])
+  @@index([clinicaId, numeroIdentificacion])
   @@map("patients")
 }
 

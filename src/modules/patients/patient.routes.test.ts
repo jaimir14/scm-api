@@ -134,14 +134,14 @@ describe('Patient Routes', () => {
       expect(body.success).toBe(true);
     });
 
-    it('should return 400 for missing q parameter', async () => {
+    it('should return 200 with no q (browse all patients)', async () => {
       const res = await app.inject({
         method: 'GET',
         url: '/api/v1/patients/search',
         headers: { authorization: `Bearer ${token}` },
       });
 
-      expect(res.statusCode).toBe(400);
+      expect(res.statusCode).toBe(200);
     });
   });
 

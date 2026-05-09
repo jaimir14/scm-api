@@ -131,12 +131,16 @@ describe('patientSearchSchema', () => {
     expect(result.type).toBe('cedula');
   });
 
-  it('should reject empty q', () => {
-    expect(() => patientSearchSchema.parse({ q: '' })).toThrow();
+  it('should accept empty q (returns all patients)', () => {
+    const result = patientSearchSchema.parse({ q: '' });
+    expect(result.q).toBe('');
   });
 
-  it('should reject missing q', () => {
-    expect(() => patientSearchSchema.parse({})).toThrow();
+  it('should accept missing q and default to empty string', () => {
+    const result = patientSearchSchema.parse({});
+    expect(result.q).toBe('');
+    expect(result.page).toBe(1);
+    expect(result.limit).toBe(25);
   });
 
   it('should reject invalid type', () => {

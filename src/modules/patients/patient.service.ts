@@ -1,7 +1,7 @@
 import { prisma } from '../../database';
 import { NotFoundError } from '../../common/errors';
-import { PaginatedResponse, PaginationQuery } from '../../common/schemas';
-import { CreatePatientInput, UpdatePatientInput, PatientSearchQuery } from './patient.schema';
+import { PaginatedResponse } from '../../common/schemas';
+import { CreatePatientInput, UpdatePatientInput, PatientSearchQuery, PatientListQuery } from './patient.schema';
 
 type Patient = Awaited<ReturnType<typeof prisma.patient.findFirstOrThrow>>;
 
@@ -13,18 +13,20 @@ const includeRelations = {
 };
 
 export class PatientService {
-  async findAll(query: PaginationQuery, clinicaId?: number | null): Promise<PaginatedResponse<Patient>> {
-    const { page, limit } = query;
+  async findAll(query: PatientListQuery, clinicaId?: number | null): Promise<PaginatedResponse<Patient>> {
+    const { q, type, page, limit } = query;
     const skip = (page - 1) * limit;
 
-    const where = clinicaId ? { clinicaId } : {};
+    const clinicFilter = clinicaId ? { clinicaId } : {};
+    const searchFilter = this._buildSearchFilter(q, type);
+    const where = { ...clinicFilter, ...searchFilter };
 
     const [data, total] = await Promise.all([
       prisma.patient.findMany({
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: [{ apellido1: 'asc' }, { apellido2: 'asc' }, { nombre: 'asc' }],
         include: includeRelations,
       }),
       prisma.patient.count({ where }),
@@ -41,37 +43,22 @@ export class PatientService {
     };
   }
 
-  async search(query: PatientSearchQuery, clinicaId?: number | null): Promise<Patient[]> {
-    const { q, type } = query;
-
-    const clinicFilter = clinicaId ? { clinicaId } : {};
-
+  private _buildSearchFilter(q: string, type: string) {
+    if (!q) return {};
     if (type === 'cedula') {
-      return prisma.patient.findMany({
-        where: {
-          ...clinicFilter,
-          numeroIdentificacion: { contains: q },
-        },
-        include: includeRelations,
-        take: 20,
-        orderBy: { nombre: 'asc' },
-      });
+      return { numeroIdentificacion: { contains: q } };
     }
+    return {
+      OR: [
+        { nombre: { contains: q } },
+        { apellido1: { contains: q } },
+        { apellido2: { contains: q } },
+      ],
+    };
+  }
 
-    // Search by nombre (first name + last names)
-    return prisma.patient.findMany({
-      where: {
-        ...clinicFilter,
-        OR: [
-          { nombre: { contains: q } },
-          { apellido1: { contains: q } },
-          { apellido2: { contains: q } },
-        ],
-      },
-      include: includeRelations,
-      take: 20,
-      orderBy: { nombre: 'asc' },
-    });
+  async search(query: PatientSearchQuery, clinicaId?: number | null): Promise<PaginatedResponse<Patient>> {
+    return this.findAll(query, clinicaId);
   }
 
   async findById(id: number): Promise<Patient> {
