@@ -1,5 +1,5 @@
 import { prisma } from '../../database';
-import { NotFoundError } from '../../common/errors';
+import { NotFoundError, BadRequestError } from '../../common/errors';
 import { PaginatedResponse, PaginationQuery } from '../../common/schemas';
 import { CreateUserInput, UpdateUserInput } from './user.schema';
 import { hashPassword } from '../auth/password.utils';
@@ -67,14 +67,27 @@ export class UserService {
 
   async create(input: CreateUserInput) {
     const { password, ...rest } = input;
-    const user = await prisma.user.create({
-      data: {
-        ...rest,
-        passwordHash: await hashPassword(password),
-      },
-      include: includeRelations,
-    });
-    return formatUser(user);
+    try {
+      const user = await prisma.user.create({
+        data: {
+          ...rest,
+          passwordHash: await hashPassword(password),
+        },
+        include: includeRelations,
+      });
+      return formatUser(user);
+    } catch (err: any) {
+      if (err?.code === 'P2002') {
+        const target: string = err?.meta?.target?.[0] ?? '';
+        if (target === 'usuario') {
+          throw new BadRequestError('El nombre de usuario ya está en uso', 400, true, [{ field: 'usuario', message: 'El nombre de usuario ya está en uso' }]);
+        }
+        if (target === 'numero_identificacion') {
+          throw new BadRequestError('El número de identificación ya está registrado', 400, true, [{ field: 'numeroIdentificacion', message: 'El número de identificación ya está registrado' }]);
+        }
+      }
+      throw err;
+    }
   }
 
   async update(id: number, input: UpdateUserInput) {
@@ -90,12 +103,25 @@ export class UserService {
       data.passwordHash = await hashPassword(password);
     }
 
-    const user = await prisma.user.update({
-      where: { id },
-      data,
-      include: includeRelations,
-    });
-    return formatUser(user);
+    try {
+      const user = await prisma.user.update({
+        where: { id },
+        data,
+        include: includeRelations,
+      });
+      return formatUser(user);
+    } catch (err: any) {
+      if (err?.code === 'P2002') {
+        const target: string = err?.meta?.target?.[0] ?? '';
+        if (target === 'usuario') {
+          throw new BadRequestError('El nombre de usuario ya está en uso', 400, true, [{ field: 'usuario', message: 'El nombre de usuario ya está en uso' }]);
+        }
+        if (target === 'numero_identificacion') {
+          throw new BadRequestError('El número de identificación ya está registrado', 400, true, [{ field: 'numeroIdentificacion', message: 'El número de identificación ya está registrado' }]);
+        }
+      }
+      throw err;
+    }
   }
 
   async delete(id: number): Promise<void> {

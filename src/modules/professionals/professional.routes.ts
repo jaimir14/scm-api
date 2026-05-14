@@ -8,7 +8,7 @@ import { getClinicScope } from '../../common/helpers/clinic-scope';
 export async function professionalRoutes(fastify: FastifyInstance) {
   fastify.addHook('onRequest', authenticate);
 
-  // GET /professionals - List all professionals (users with MEDICO role), paginated
+  // GET /professionals - List all professionals (users with specialty), paginated
   fastify.get('/', async (request, reply) => {
     const query = paginationSchema.parse(request.query);
     const clinicaId = getClinicScope(request);

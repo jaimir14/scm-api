@@ -40,7 +40,7 @@ describe('Patient Routes', () => {
     antecedentesQuirurgicos: null,
     antecedentesGinecoObstetricos: null,
     antecedentesHeredoFamiliares: null,
-    otrosAntecedentes: null,
+    antecedentesOtros: null,
     notas: null,
     estado: true,
     createdAt: new Date('2026-01-01'),

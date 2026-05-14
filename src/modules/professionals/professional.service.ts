@@ -2,17 +2,13 @@ import { prisma } from '../../database';
 import { NotFoundError } from '../../common/errors';
 import { PaginatedResponse, PaginationQuery } from '../../common/schemas';
 
-/**
- * ProfessionalService queries the User model filtered by role name containing 'Médico' or similar.
- * With dynamic roles, we look for users whose role is typically a doctor-type role.
- * We filter by the role relation instead of a hardcoded enum.
- */
-
 const selectProfessionalFields = {
   id: true,
   nombre: true,
   especialidad: true,
   clinicaId: true,
+  telefono: true,
+  email: true,
   estado: true,
   createdAt: true,
   updatedAt: true,
@@ -20,11 +16,16 @@ const selectProfessionalFields = {
   rol: { select: { id: true, nombre: true } },
 };
 
+function toResponse(user: Record<string, unknown>) {
+  const { estado, ...rest } = user;
+  return { ...rest, activo: estado };
+}
+
 export class ProfessionalService {
   async findAll(query: PaginationQuery, clinicaId?: number | null): Promise<PaginatedResponse<unknown>> {
     const { page, limit } = query;
     const skip = (page - 1) * limit;
-    const where: any = { especialidad: { not: null } };
+    const where: Record<string, unknown> = { especialidad: { not: null } };
     if (clinicaId) where.clinicaId = clinicaId;
 
     const [data, total] = await Promise.all([
@@ -39,7 +40,7 @@ export class ProfessionalService {
     ]);
 
     return {
-      data,
+      data: data.map(toResponse),
       meta: {
         total,
         page,
@@ -50,13 +51,14 @@ export class ProfessionalService {
   }
 
   async findActive(clinicaId?: number | null): Promise<unknown[]> {
-    const where: any = { especialidad: { not: null }, estado: true };
+    const where: Record<string, unknown> = { especialidad: { not: null }, estado: true };
     if (clinicaId) where.clinicaId = clinicaId;
-    return prisma.user.findMany({
+    const data = await prisma.user.findMany({
       where,
       orderBy: { nombre: 'asc' },
       select: selectProfessionalFields,
     });
+    return data.map(toResponse);
   }
 
   async findById(id: number): Promise<unknown> {
@@ -67,7 +69,7 @@ export class ProfessionalService {
     if (!professional || professional.clinicaId === null) {
       throw new NotFoundError('Professional');
     }
-    return professional;
+    return toResponse(professional as Record<string, unknown>);
   }
 }
 

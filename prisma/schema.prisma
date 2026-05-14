@@ -170,7 +170,7 @@ model Patient {
   antecedentesQuirurgicos     String?            @map("antecedentes_quirurgicos") @db.Text
   antecedentesGinecoObstetricos Json?            @map("antecedentes_gineco_obstetricos")
   antecedentesHeredoFamiliares String?           @map("antecedentes_heredo_familiares") @db.Text
-  otrosAntecedentes           String?            @map("otros_antecedentes") @db.Text
+  antecedentesOtros           String?            @map("otros_antecedentes") @db.Text
   notas                       String?            @db.Text
   estado                      Boolean            @default(true)
   createdAt                   DateTime           @default(now()) @map("created_at")
@@ -322,14 +322,14 @@ model SystemConfig {
   zonaHoraria           String   @map("zona_horaria") @db.VarChar(100)
   formatoFecha          String   @map("formato_fecha") @db.VarChar(50)
   duracionCitaDefecto   Int      @map("duracion_cita_defecto")
-  horaInicio            String   @map("hora_inicio") @db.VarChar(10)
-  horaFin               String   @map("hora_fin") @db.VarChar(10)
+  horaInicioJornada     String   @map("hora_inicio") @db.VarChar(10)
+  horaFinJornada        String   @map("hora_fin") @db.VarChar(10)
   restriccionHorario    Boolean  @default(false) @map("restriccion_horario")
   registrarBitacora     Boolean  @default(true) @map("registrar_bitacora")
   requerirCambioClave   Boolean  @default(false) @map("requerir_cambio_clave")
   tiempoInactividad     Int      @default(30) @map("tiempo_inactividad")
-  recordatorioEmail     Boolean  @default(false) @map("recordatorio_email")
-  notificarMedico       Boolean  @default(false) @map("notificar_medico")
+  enviarRecordatorioEmail Boolean @default(false) @map("recordatorio_email")
+  notificarMedicoCitas  Boolean  @default(false) @map("notificar_medico")
   updatedAt             DateTime @updatedAt @map("updated_at")
 
   @@map("system_config")

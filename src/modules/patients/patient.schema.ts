@@ -28,7 +28,7 @@ export const createPatientSchema = z.object({
   antecedentesQuirurgicos: z.string().optional().or(z.literal('')),
   antecedentesGinecoObstetricos: z.any().optional(),
   antecedentesHeredoFamiliares: z.string().optional().or(z.literal('')),
-  otrosAntecedentes: z.string().optional().or(z.literal('')),
+  antecedentesOtros: z.string().optional().or(z.literal('')),
   notas: z.string().optional().or(z.literal('')),
   estado: z.boolean().default(true),
 });
@@ -57,7 +57,7 @@ export const updatePatientSchema = z.object({
   antecedentesQuirurgicos: z.string().optional().or(z.literal('')),
   antecedentesGinecoObstetricos: z.any().optional(),
   antecedentesHeredoFamiliares: z.string().optional().or(z.literal('')),
-  otrosAntecedentes: z.string().optional().or(z.literal('')),
+  antecedentesOtros: z.string().optional().or(z.literal('')),
   notas: z.string().optional().or(z.literal('')),
   estado: z.boolean().optional(),
 });

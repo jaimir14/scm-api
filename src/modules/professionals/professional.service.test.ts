@@ -10,15 +10,34 @@ import { ProfessionalService } from './professional.service';
 describe('ProfessionalService', () => {
   let service: ProfessionalService;
 
+  // What Prisma returns (includes estado)
+  const mockRawProfessional = {
+    id: 1,
+    nombre: 'Dr. Carlos Rodriguez',
+    especialidad: 'Odontologia General',
+    clinicaId: 1,
+    telefono: null,
+    email: null,
+    estado: true,
+    createdAt: new Date('2026-01-01'),
+    updatedAt: new Date('2026-01-01'),
+    clinica: { id: 1, nombre: 'Clinica Central' },
+    rol: { id: 2, nombre: 'Médico' },
+  };
+
+  // What the service returns after transformation (estado → activo)
   const mockProfessional = {
     id: 1,
     nombre: 'Dr. Carlos Rodriguez',
     especialidad: 'Odontologia General',
     clinicaId: 1,
-    estado: true,
+    telefono: null,
+    email: null,
+    activo: true,
     createdAt: new Date('2026-01-01'),
     updatedAt: new Date('2026-01-01'),
     clinica: { id: 1, nombre: 'Clinica Central' },
+    rol: { id: 2, nombre: 'Médico' },
   };
 
   beforeEach(() => {
@@ -28,7 +47,7 @@ describe('ProfessionalService', () => {
 
   describe('findAll', () => {
     it('should return paginated professionals (MEDICO users)', async () => {
-      mockPrismaClient.user.findMany.mockResolvedValue([mockProfessional]);
+      mockPrismaClient.user.findMany.mockResolvedValue([mockRawProfessional]);
       mockPrismaClient.user.count.mockResolvedValue(1);
 
       const result = await service.findAll({ page: 1, limit: 20 });
@@ -70,7 +89,7 @@ describe('ProfessionalService', () => {
 
   describe('findActive', () => {
     it('should return active MEDICO users sorted by nombre', async () => {
-      mockPrismaClient.user.findMany.mockResolvedValue([mockProfessional]);
+      mockPrismaClient.user.findMany.mockResolvedValue([mockRawProfessional]);
 
       const result = await service.findActive();
 
@@ -86,7 +105,7 @@ describe('ProfessionalService', () => {
 
   describe('findById', () => {
     it('should return professional when found', async () => {
-      mockPrismaClient.user.findUnique.mockResolvedValue(mockProfessional);
+      mockPrismaClient.user.findUnique.mockResolvedValue(mockRawProfessional);
 
       const result = await service.findById(1);
 

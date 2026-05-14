@@ -13,7 +13,7 @@ describe('AppointmentService', () => {
   const includeRelations = {
     paciente: true,
     profesional: {
-      select: { id: true, nombre: true, especialidad: true, clinicaId: true, clinica: true },
+      select: { id: true, nombre: true, especialidad: true, clinicaId: true, clinica: true, color: true },
     },
     tipoCita: true,
   };

@@ -18,10 +18,13 @@ describe('Professional Routes', () => {
     nombre: 'Dr. Carlos',
     especialidad: 'Odontologia General',
     clinicaId: 1,
+    telefono: null,
+    email: null,
     estado: true,
     createdAt: new Date('2026-01-01'),
     updatedAt: new Date('2026-01-01'),
     clinica: { id: 1, nombre: 'Clinica Central' },
+    rol: { id: 2, nombre: 'Médico' },
   };
 
   beforeAll(async () => {

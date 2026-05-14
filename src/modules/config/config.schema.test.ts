@@ -49,27 +49,28 @@ describe('updateConfigSchema', () => {
     expect(() => updateConfigSchema.parse({ tiempoInactividad: 0 })).toThrow();
   });
 
-  it('should reject empty horaInicio', () => {
-    expect(() => updateConfigSchema.parse({ horaInicio: '' })).toThrow();
+  it('should reject empty horaInicioJornada', () => {
+    expect(() => updateConfigSchema.parse({ horaInicioJornada: '' })).toThrow();
   });
 
-  it('should reject empty horaFin', () => {
-    expect(() => updateConfigSchema.parse({ horaFin: '' })).toThrow();
+  it('should reject empty horaFinJornada', () => {
+    expect(() => updateConfigSchema.parse({ horaFinJornada: '' })).toThrow();
   });
 
   it('should reject nombreSistema longer than 255 characters', () => {
     expect(() => updateConfigSchema.parse({ nombreSistema: 'A'.repeat(256) })).toThrow();
   });
 
-  it('should accept boolean fields', () => {
+  it('should accept boolean and mapped fields', () => {
     const result = updateConfigSchema.parse({
       restriccionHorario: false,
       registrarBitacora: true,
-      requerirCambioClave: false,
-      recordatorioEmail: true,
-      notificarMedico: false,
+      cambioPasswordDias: 90,
+      enviarRecordatorioEmail: true,
+      notificarMedicoCitas: false,
     });
     expect(result.restriccionHorario).toBe(false);
     expect(result.registrarBitacora).toBe(true);
+    expect(result.cambioPasswordDias).toBe(90);
   });
 });

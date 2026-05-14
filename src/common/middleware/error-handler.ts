@@ -15,6 +15,7 @@ export function errorHandler(
     return reply.status(error.statusCode).send({
       success: false,
       error: error.message,
+      ...(error.details && { details: error.details }),
     });
   }
 
