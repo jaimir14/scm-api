@@ -14,6 +14,8 @@ function mockModel() {
     update: vi.fn(),
     delete: vi.fn(),
     upsert: vi.fn(),
+    aggregate: vi.fn(),
+    groupBy: vi.fn().mockResolvedValue([]),
   };
 }
 

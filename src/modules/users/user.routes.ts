@@ -29,6 +29,13 @@ export async function userPublicRoutes(fastify: FastifyInstance) {
     const doctors = await userService.findDoctors(clinicaId);
     return reply.send({ success: true, data: doctors });
   });
+
+  // GET /users/dentists - List active users whose role has dentista.access feature
+  fastify.get('/dentists', async (request, reply) => {
+    const clinicaId = getClinicScope(request);
+    const dentists = await userService.findDentists(clinicaId);
+    return reply.send({ success: true, data: dentists });
+  });
 }
 
 // Admin-only user endpoints

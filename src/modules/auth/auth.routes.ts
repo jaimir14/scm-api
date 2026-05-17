@@ -6,13 +6,15 @@ import { UnauthorizedError } from '../../common/errors';
 import { prisma } from '../../database';
 import { logActivity } from '../audit-log';
 import { hashPassword, verifyPassword } from './password.utils';
+import { env } from '../../config';
 
 /**
  * Auth routes - login, token generation (dev), current user info, and permissions.
  */
 export async function authRoutes(fastify: FastifyInstance) {
   // POST /auth/token - Generate a JWT token (for development/testing)
-  fastify.post('/token', async (request, reply) => {
+  if (env.NODE_ENV === 'development' || env.NODE_ENV === 'test') {
+    fastify.post('/token', async (request, reply) => {
     const body = request.body as {
       sub: string;
       role?: string;
@@ -32,6 +34,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       data: { token },
     });
   });
+  }
 
   // POST /auth/login - Authenticate user with credentials
   fastify.post('/login', async (request, reply) => {

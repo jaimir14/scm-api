@@ -21,6 +21,7 @@ import { consultationImageRoutes } from './modules/consultation-images';
 import { patientFileRoutes } from './modules/patient-files';
 import { roleRoutes } from './modules/roles';
 import { featureRoutes } from './modules/features';
+import { contratoRoutes } from './modules/contratos';
 import { env } from './config';
 import * as z from 'zod';
 
@@ -37,7 +38,7 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // --- Security plugins ---
   await app.register(cors, {
-    origin: true, // Configure per environment in production
+    origin: env.NODE_ENV === 'production' ? env.CORS_ORIGIN.split(',') : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
@@ -92,6 +93,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   app.register(patientFileRoutes, { prefix: '/api/v1/patient-files' });
   app.register(roleRoutes, { prefix: '/api/v1/roles' });
   app.register(featureRoutes, { prefix: '/api/v1/features' });
+  app.register(contratoRoutes, { prefix: '/api/v1' });
 
   return app;
 }

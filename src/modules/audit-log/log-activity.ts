@@ -29,7 +29,8 @@ export async function logActivity(params: LogActivityParams): Promise<void> {
       },
     });
   } catch (error) {
-    // Log errors silently — audit logging should not break the main flow
+    // We do not have request here to log properly, so we just swallow the error 
+    // or we could use a global logger if provided. For now, silence or keep minimal
     console.error('[AUDIT LOG ERROR]', error);
   }
 }

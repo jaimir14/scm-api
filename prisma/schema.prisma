@@ -81,6 +81,7 @@ model Role {
   @@map("roles")
 }
 
+
 model Feature {
   id          Int      @id @default(autoincrement())
   clave       String   @unique @db.VarChar(100)
@@ -142,6 +143,10 @@ model User {
   appointments  Appointment[]
   auditLogs     AuditLog[]
 
+  DentistaContratos  Contrato[]   @relation("DentistaContratos")
+  CreadoPorContratos Contrato[]   @relation("CreadoPorContratos")
+  PagosRegistrados   ContratoPago[] @relation("PagosRegistrados")
+
   @@map("users")
 }
 
@@ -181,6 +186,7 @@ model Patient {
   consultations Consultation[]
   appointments  Appointment[]
   files         PatientFile[]
+  contratos     Contrato[]
 
   @@index([clinicaId, createdAt(sort: Desc)])
   @@index([clinicaId, nombre, apellido1, apellido2])
@@ -210,6 +216,8 @@ model Treatment {
   estado    Boolean              @default(true)
   createdAt DateTime             @default(now()) @map("created_at")
   updatedAt DateTime             @updatedAt @map("updated_at")
+
+  contratoTratamientos ContratoTratamiento[]
 
   @@map("treatments")
 }
@@ -333,4 +341,134 @@ model SystemConfig {
   updatedAt             DateTime @updatedAt @map("updated_at")
 
   @@map("system_config")
+}
+
+// --- Contratos Module ---
+
+enum EstadoContrato {
+  BORRADOR
+  ACTIVO
+  PAUSADO
+  COMPLETADO
+  CANCELADO
+}
+
+enum EstadoItem {
+  PROPUESTO
+  ACEPTADO
+  EN_CURSO
+  FINALIZADO
+  CANCELADO
+}
+
+enum Periodicidad {
+  SEMANAL
+  QUINCENAL
+  MENSUAL
+  TRIMESTRAL
+  SEMESTRAL
+  ANUAL
+}
+
+enum TipoPago {
+  EFECTIVO
+  TARJETA
+  SINPE
+  TRANSFERENCIA
+  CHEQUE
+  OTRO
+}
+
+enum EstadoPago {
+  APLICADO
+  ANULADO
+}
+
+enum AccionContrato {
+  CREACION
+  ACTIVACION
+  MODIFICACION
+  ESTADO_CAMBIADO
+  TRATAMIENTO_AGREGADO
+  TRATAMIENTO_MODIFICADO
+  TRATAMIENTO_ELIMINADO
+  PAGO_REGISTRADO
+  PAGO_ANULADO
+}
+
+model Contrato {
+  id           String         @id @default(cuid())
+  numero       String         @unique
+  pacienteId   Int
+  dentistaId   Int
+  clinicaId    Int
+  fecha        DateTime
+  descripcion  String?        @db.Text
+  estado       EstadoContrato @default(BORRADOR)
+  moneda       String         @default("CRC")
+  plazo        Int?
+  periodicidad Periodicidad?
+  notas        String?        @db.Text
+  creadoPorId  Int
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  paciente     Patient              @relation(fields: [pacienteId], references: [id])
+  dentista     User                 @relation("DentistaContratos", fields: [dentistaId], references: [id])
+  creadoPor    User                 @relation("CreadoPorContratos", fields: [creadoPorId], references: [id])
+  tratamientos ContratoTratamiento[]
+  pagos        ContratoPago[]
+  historial    ContratoHistorial[]
+}
+
+model ContratoTratamiento {
+  id             String     @id @default(cuid())
+  contratoId     String
+  tratamientoId  Int
+  pieza          String?
+  cantidad       Int        @default(1)
+  precioUnitario Decimal    @db.Decimal(10, 2)
+  descuento      Decimal    @db.Decimal(10, 2) @default(0)
+  subtotal       Decimal    @db.Decimal(10, 2)
+  estadoItem     EstadoItem @default(PROPUESTO)
+  fechaPropuesta DateTime?
+  observaciones  String?
+  createdAt      DateTime   @default(now())
+
+  contrato    Contrato  @relation(fields: [contratoId], references: [id], onDelete: Cascade)
+  tratamiento Treatment @relation(fields: [tratamientoId], references: [id])
+}
+
+model ContratoPago {
+  id              String     @id @default(cuid())
+  contratoId      String
+  fecha           DateTime
+  monto           Decimal    @db.Decimal(10, 2)
+  tipoPago        TipoPago
+  estado          EstadoPago @default(APLICADO)
+  concepto        String?
+  referencia      String?
+  numeroFactura   String?
+  autorizacion    String?
+  notas           String?
+  motivoAnulacion String?
+  registradoPorId Int
+
+  createdAt DateTime @default(now())
+
+  contrato      Contrato @relation(fields: [contratoId], references: [id], onDelete: Cascade)
+  registradoPor User     @relation("PagosRegistrados", fields: [registradoPorId], references: [id])
+}
+
+model ContratoHistorial {
+  id            String         @id @default(cuid())
+  contratoId    String
+  accion        AccionContrato
+  descripcion   String
+  usuarioId     Int
+  nombreUsuario String
+  detalle       Json?
+  createdAt     DateTime       @default(now())
+
+  contrato Contrato @relation(fields: [contratoId], references: [id], onDelete: Cascade)
 }

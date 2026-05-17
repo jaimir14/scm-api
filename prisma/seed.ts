@@ -36,6 +36,15 @@ const FEATURES = [
   { clave: 'doctor.pacientes', nombre: 'Pacientes del Médico', descripcion: 'Listado de pacientes del médico', modulo: 'Portal Médico' },
 ];
 
+const CONTRATOS_FEATURES = [
+  { clave: 'dentista.access', nombre: 'Acceso Dentista', descripcion: 'Marca al usuario como dentista del consultorio', modulo: 'dentistas', activo: true },
+  { clave: 'contratos.ver', nombre: 'Ver contratos', descripcion: 'Permite ver la lista y detalle de contratos', modulo: 'contratos', activo: true },
+  { clave: 'contratos.crear', nombre: 'Crear contratos', descripcion: 'Permite crear nuevos contratos', modulo: 'contratos', activo: true },
+  { clave: 'contratos.editar', nombre: 'Editar contratos', descripcion: 'Permite editar contratos y sus tratamientos', modulo: 'contratos', activo: true },
+  { clave: 'contratos.eliminar', nombre: 'Eliminar contratos', descripcion: 'Permite eliminar contratos en estado BORRADOR', modulo: 'contratos', activo: true },
+  { clave: 'contratos.pago.registrar', nombre: 'Registrar pagos', descripcion: 'Permite registrar y anular pagos de contratos', modulo: 'contratos', activo: true },
+];
+
 // Features assigned to the Médico role
 const DOCTOR_FEATURE_KEYS = [
   'doctor.dashboard',
@@ -43,6 +52,8 @@ const DOCTOR_FEATURE_KEYS = [
   'doctor.pacientes',
   'expediente.buscar',
 ];
+
+const DENTISTA_FEATURE_KEYS = ['dentista.access'];
 
 // ── Appointment Types ─────────────────────────────────────────────────────────
 
@@ -66,7 +77,14 @@ async function main() {
       create: feature,
     });
   }
-  console.log(`✅ ${FEATURES.length} features`);
+  for (const feature of CONTRATOS_FEATURES) {
+    await prisma.feature.upsert({
+      where: { clave: feature.clave },
+      update: { nombre: feature.nombre, descripcion: feature.descripcion, modulo: feature.modulo },
+      create: feature,
+    });
+  }
+  console.log(`✅ ${FEATURES.length + CONTRATOS_FEATURES.length} features`);
 
   // 2. Roles
   const adminRole = await prisma.role.upsert({
@@ -90,7 +108,17 @@ async function main() {
       activo: true,
     },
   });
-  console.log(`✅ Roles: Administrador (id: ${adminRole.id}), Médico (id: ${medicoRole.id})`);
+  const dentistaRole = await prisma.role.upsert({
+    where: { nombre: 'Dentista' },
+    update: { descripcion: 'Dentista del consultorio' },
+    create: {
+      nombre: 'Dentista',
+      descripcion: 'Dentista del consultorio',
+      esAdmin: false,
+      activo: true,
+    },
+  });
+  console.log(`✅ Roles: Administrador (id: ${adminRole.id}), Médico (id: ${medicoRole.id}), Dentista (id: ${dentistaRole.id})`);
 
   // 3. Assign features to Médico role
   const doctorFeatures = await prisma.feature.findMany({
@@ -103,6 +131,17 @@ async function main() {
     skipDuplicates: true,
   });
   console.log(`✅ ${doctorFeatures.length} features assigned to Médico role`);
+
+  // Assign dentista.access to Dentista role
+  const dentistaFeatures = await prisma.feature.findMany({
+    where: { clave: { in: DENTISTA_FEATURE_KEYS } },
+  });
+  await prisma.roleFeature.deleteMany({ where: { rolId: dentistaRole.id } });
+  await prisma.roleFeature.createMany({
+    data: dentistaFeatures.map(f => ({ rolId: dentistaRole.id, featureId: f.id })),
+    skipDuplicates: true,
+  });
+  console.log(`✅ ${dentistaFeatures.length} features assigned to Dentista role`);
 
   // 4. Clinic
   const clinic = await prisma.clinic.upsert({
@@ -128,7 +167,7 @@ async function main() {
     create: {
       usuario: 'jmiranda',
       nombre: 'Dr. Miranda',
-      password: adminPassword,
+      passwordHash: adminPassword,
       rolId: adminRole.id,
       tipoIdentificacion: 'CEDULA',
       numeroIdentificacion: '101010101',
@@ -144,7 +183,7 @@ async function main() {
     create: {
       usuario: 'doctor',
       nombre: 'Dr. López',
-      password: doctorPassword,
+      passwordHash: doctorPassword,
       rolId: medicoRole.id,
       tipoIdentificacion: 'CEDULA',
       numeroIdentificacion: '202020202',
@@ -180,14 +219,14 @@ async function main() {
       zonaHoraria: 'America/Costa_Rica',
       formatoFecha: 'DD/MM/YYYY',
       duracionCitaDefecto: 30,
-      horaInicio: '08:00',
-      horaFin: '18:00',
+      horaInicioJornada: '08:00',
+      horaFinJornada: '18:00',
       restriccionHorario: false,
       registrarBitacora: true,
       requerirCambioClave: false,
       tiempoInactividad: 30,
-      recordatorioEmail: false,
-      notificarMedico: false,
+      enviarRecordatorioEmail: false,
+      notificarMedicoCitas: false,
     },
   });
   console.log('✅ System config');

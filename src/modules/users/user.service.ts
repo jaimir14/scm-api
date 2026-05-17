@@ -1,5 +1,5 @@
 import { prisma } from '../../database';
-import { NotFoundError, BadRequestError } from '../../common/errors';
+import { AppError, NotFoundError, BadRequestError } from '../../common/errors';
 import { PaginatedResponse, PaginationQuery } from '../../common/schemas';
 import { CreateUserInput, UpdateUserInput } from './user.schema';
 import { hashPassword } from '../auth/password.utils';
@@ -80,10 +80,10 @@ export class UserService {
       if (err?.code === 'P2002') {
         const target: string = err?.meta?.target?.[0] ?? '';
         if (target === 'usuario') {
-          throw new BadRequestError('El nombre de usuario ya está en uso', 400, true, [{ field: 'usuario', message: 'El nombre de usuario ya está en uso' }]);
+          throw new AppError('El nombre de usuario ya está en uso', 400, true, [{ field: 'usuario', message: 'El nombre de usuario ya está en uso' }]);
         }
         if (target === 'numero_identificacion') {
-          throw new BadRequestError('El número de identificación ya está registrado', 400, true, [{ field: 'numeroIdentificacion', message: 'El número de identificación ya está registrado' }]);
+          throw new AppError('El número de identificación ya está registrado', 400, true, [{ field: 'numeroIdentificacion', message: 'El número de identificación ya está registrado' }]);
         }
       }
       throw err;
@@ -114,10 +114,10 @@ export class UserService {
       if (err?.code === 'P2002') {
         const target: string = err?.meta?.target?.[0] ?? '';
         if (target === 'usuario') {
-          throw new BadRequestError('El nombre de usuario ya está en uso', 400, true, [{ field: 'usuario', message: 'El nombre de usuario ya está en uso' }]);
+          throw new AppError('El nombre de usuario ya está en uso', 400, true, [{ field: 'usuario', message: 'El nombre de usuario ya está en uso' }]);
         }
         if (target === 'numero_identificacion') {
-          throw new BadRequestError('El número de identificación ya está registrado', 400, true, [{ field: 'numeroIdentificacion', message: 'El número de identificación ya está registrado' }]);
+          throw new AppError('El número de identificación ya está registrado', 400, true, [{ field: 'numeroIdentificacion', message: 'El número de identificación ya está registrado' }]);
         }
       }
       throw err;
@@ -139,6 +139,33 @@ export class UserService {
     const roleFeatures = await prisma.roleFeature.findMany({
       where: {
         feature: { clave: { in: DOCTOR_FEATURE_KEYS } },
+      },
+      select: { rolId: true },
+    });
+
+    const rolIds = [...new Set(roleFeatures.map(rf => rf.rolId))];
+    if (rolIds.length === 0) return [];
+
+    const users = await prisma.user.findMany({
+      where: {
+        estado: true,
+        rolId: { in: rolIds },
+        rol: { activo: true },
+        ...(clinicaId ? { clinicaId } : {}),
+      },
+      orderBy: { nombre: 'asc' },
+      include: includeRelations,
+    });
+
+    return users.map(formatUser);
+  }
+
+  async findDentists(clinicaId?: number | null) {
+    const DENTISTA_FEATURE_KEY = 'dentista.access';
+
+    const roleFeatures = await prisma.roleFeature.findMany({
+      where: {
+        feature: { clave: DENTISTA_FEATURE_KEY },
       },
       select: { rolId: true },
     });

@@ -4,11 +4,11 @@ import { env } from '../../config';
 
 export function errorHandler(
   error: FastifyError | AppError,
-  _request: FastifyRequest,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) {
   // Log the error
-  console.error(`[ERROR] ${error.message}`, env.NODE_ENV === 'development' ? error.stack : '');
+  request.log?.error?.(error) || console.error(error);
 
   // Handle known operational errors
   if (error instanceof AppError) {
